@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyShift.Models
+namespace MyShift.Enums
 {
-    internal class User
+    public enum Role
     {
+        Administrator,
+        Moderator,
+        User
     }
 }
