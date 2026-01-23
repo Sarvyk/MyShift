@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using DotNetEnv;
+using Telegram.Bot;
 
 namespace MyShift
 {
@@ -7,9 +8,9 @@ namespace MyShift
         private static string _token = "";
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Добро пожаловать в бот планировщик. Ниже описаны возможные команды.");
-            ITelegramBotClient botClient = new TelegramBotClient(_token);
-            //var me = await botClient.GetMe();
+            Env.Load();
+            _token = Env.GetString("API_TOKEN");
+            var botClient = new TelegramBotClient(_token);
             var Handle = new UpdateHandler();
             botClient.StartReceiving(Handle);
             await Task.Delay(-1);

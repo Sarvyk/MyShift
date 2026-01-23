@@ -18,7 +18,18 @@ namespace MyShift
 
         public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            botClient.SendMessage(update.Message.Chat, $"Повторяю:{update.Message.Text}");
+            switch(update.Message.Text)
+            {
+                case "/start":
+                    botClient.SendMessage(update.Message.Chat, "Добро пожаловать в планировщик графика для работы.");
+                    break;
+                case "/GetData":
+                    botClient.SendMessage(update.Message.Chat, $"Данные пользователя для работы: FirstName {update.Message.From.FirstName}; Lastname {update.Message.From.LastName}; Username {update.Message.From.Username}; UserId {update.Message.From.Id}; isBot {update.Message.From.IsBot}");
+                    break;
+                default:
+                    botClient.SendMessage(update.Message.Chat,"Такой команды не существует.");
+                    break;
+            }
             return Task.CompletedTask;
         }
     }

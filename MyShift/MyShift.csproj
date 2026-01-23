@@ -9,7 +9,20 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.23" />
+    <PackageReference Include="System.Data.SQLite" Version="2.0.2" />
     <PackageReference Include="Telegram.Bot" Version="22.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update=".env">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>
