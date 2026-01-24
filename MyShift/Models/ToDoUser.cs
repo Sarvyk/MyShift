@@ -25,6 +25,7 @@ namespace MyShift.Models
             FirstName = firstName;
             LastName = lastName;
             RegisteredAt = DateTime.Now;
+            Role = Role.User;
         }
         public ToDoUser() { }
     }

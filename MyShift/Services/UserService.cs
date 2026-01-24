@@ -29,6 +29,7 @@ namespace MyShift.Services
         public ToDoUser? RegisterUser(User userData)
         {
             ToDoUser toDoUser = new ToDoUser(userData.Id, userData.Username, userData.FirstName, userData.LastName);
+            Console.WriteLine(toDoUser.Role);
             _userRepository.RegisterUserAsync(toDoUser);
             return toDoUser;
         }

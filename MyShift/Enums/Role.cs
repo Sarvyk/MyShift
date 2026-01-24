@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace MyShift.Enums
 {
+    [Flags]
     public enum Role
     {
-        None,
-        Administrator,
-        Moderator,
-        User
+        None = 0,
+        User = 1 << 1,
+        Moderator = 1 << 2,
+        Administrator = 1 << 3
     }
 }

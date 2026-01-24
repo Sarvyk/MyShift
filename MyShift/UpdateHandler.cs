@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Enums;
 using MyShift.Models;
 using MyShift.Services;
 using System;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace MyShift
 {
@@ -27,20 +29,28 @@ namespace MyShift
         public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             switch (update.Message.Text)
-                {
-                    case "/start":
-                        botClient.SendMessage(update.Message.Chat, StartCommand(update.Message.From));
-                        break;
-                //case "/GetData":
-                //    botClient.SendMessage(update.Message.Chat, $"Данные пользователя для работы: FirstName {update.Message.From.FirstName}; Lastname {update.Message.From.LastName}; Username {update.Message.From.Username}; UserId {update.Message.From.Id}; isBot {update.Message.From.IsBot}");
-                //    break;
-                case "/Test":
-                    botClient.SendMessage(update.Message.Chat, test(update));
+            {
+                case "/start":
+                    botClient.SendMessage(update.Message.Chat, $"{StartCommand(update.Message.From)}\r\n{HelpCommand(update.Message.From)}");
                     break;
-                    default:
-                        botClient.SendMessage(update.Message.Chat, "Такой команды не существует.");
-                        break;
-                }
+                case "/help":
+                    botClient.SendMessage(update.Message.Chat, HelpCommand(update.Message.From));
+                    break;
+                case "/график":
+                    break;
+                case string a when a.IndexOf("/изменить") == 0:
+                    if (CheckCredentials(update.Message.From, Role.Moderator | Role.Administrator,out string answer))
+                    {
+                        Console.WriteLine(answer);
+                        botClient.SendMessage(update.Message.Chat, string.IsNullOrWhiteSpace(answer) ? "заглушка" : answer);
+                    }
+                    break;
+                case "/заявки":
+                    break;
+                default:
+                    botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.\r\n{HelpCommand(update.Message.From)}");
+                    break;
+            }
             return Task.CompletedTask;
         }
         private string StartCommand(User user)
@@ -56,10 +66,49 @@ namespace MyShift
                 return $"{toDoUser.UserName}, добро пожаловать в бот \"Мой график\"!";
             }
         }
-        private string test(Update up)
+        //private string CreateRequest()
+        //{
+
+        //}
+        private bool CheckCredentials(User user, Role roles, out string answer)
         {
-            var user = _userService.GetUserByTelegramId(up.Message.From.Id);
-            return $"Добрый день, {user.LastName} {user.FirstName}";
+            ToDoUser? toDoUser = _userService.GetUserByTelegramId(user.Id);
+            if(toDoUser != null)
+            {
+                if (roles.HasFlag(toDoUser.Role))
+                {
+                    answer = "";
+                    return true;
+                }
+                else
+                {
+                    answer = "Вам не доступна эта команда!";
+                    return false;
+                }
+            }
+            else
+            {
+                answer = "Вы не зарегистрированы. Введите /start";
+                return false;
+            }
+        }
+        private string HelpCommand(User user)
+        {
+            ToDoUser? toDoUser = _userService.GetUserByTelegramId(user.Id);
+            if (toDoUser != null)
+            {
+                if (toDoUser.Role == Role.Administrator)
+                    return @"Список команд:заглушка";
+                else if (toDoUser.Role == Role.Moderator)
+                    return @"Список команд:заглушка";
+                else
+                    return @"Список команд:
+/график - показывает текущий график; 
+/изменить [описание] - создаёт заявку на смену расписания,
+/заявки - выводит список заявок";
+            }
+            else
+                return @"Вот список доступных комманд:/start, /help";
         }
     }
 }
