@@ -1,10 +1,5 @@
 ﻿using MyShift.Enums;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyShift.Models
 {
@@ -17,8 +12,11 @@ namespace MyShift.Models
         public string? LastName { get; set; }
         public DateTime RegisteredAt { get; set; }
         public Role Role { get; set; }
+        [InverseProperty("Creator")]
         public List<Request> CreatedRequests { get; set; } = new(); // Заявки пользователя
+        [InverseProperty("Processor")]
         public List<Request> ProcessedRequests { get; set; } = new(); // Обработанные заявки
+        [InverseProperty("AssignedBy")]
         public List<Schedule> Schedules { get; set; } = new(); // Графики пользователя
         public ToDoUser(long telegramId, string? userName, string? firstName, string? lastName)
         {

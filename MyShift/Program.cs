@@ -15,10 +15,10 @@ namespace MyShift
             _token = Env.GetString("API_TOKEN");
             var botClient = new TelegramBotClient(_token);
             var sqlContext = new SqLiteDbContext();
-
             var userRepository = new UserRepository(sqlContext);
             var userService = new UserService(userRepository);
             var handle = new UpdateHandler(userService);
+            botClient.DeleteWebhook(true,CancellationToken.None);
             botClient.StartReceiving(handle);
             await Task.Delay(-1);
         }

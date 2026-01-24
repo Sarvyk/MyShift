@@ -17,13 +17,13 @@ namespace MyShift.Models
         public string? ResolutionComment { get; set; } // Комментарий при обработке
 
         // Связь с создателем
-        public int CreatorId { get; set; }
-        [ForeignKey("CreatorId")]
+        public int CreatorKey { get; set; }
+        [ForeignKey("CreatorKey")]
         public ToDoUser Creator { get; set; }
 
         // Связь с обработавшим (админ/модератор)
-        public int? ProcessorId { get; set; }  // Nullable - может быть не обработана
-        [ForeignKey("ProcessorId")]
+        public int? ProcessorKey { get; set; }  // Nullable - может быть не обработана
+        [ForeignKey("ProcessorKey")]
         public ToDoUser? Processor { get; set; }
     }
 }

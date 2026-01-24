@@ -31,9 +31,12 @@ namespace MyShift
                     case "/start":
                         botClient.SendMessage(update.Message.Chat, StartCommand(update.Message.From));
                         break;
-                    //case "/GetData":
-                    //    botClient.SendMessage(update.Message.Chat, $"Данные пользователя для работы: FirstName {update.Message.From.FirstName}; Lastname {update.Message.From.LastName}; Username {update.Message.From.Username}; UserId {update.Message.From.Id}; isBot {update.Message.From.IsBot}");
-                    //    break;
+                //case "/GetData":
+                //    botClient.SendMessage(update.Message.Chat, $"Данные пользователя для работы: FirstName {update.Message.From.FirstName}; Lastname {update.Message.From.LastName}; Username {update.Message.From.Username}; UserId {update.Message.From.Id}; isBot {update.Message.From.IsBot}");
+                //    break;
+                case "/Test":
+                    botClient.SendMessage(update.Message.Chat, test(update));
+                    break;
                     default:
                         botClient.SendMessage(update.Message.Chat, "Такой команды не существует.");
                         break;
@@ -52,6 +55,11 @@ namespace MyShift
                 toDoUser = _userService.RegisterUser(user);
                 return $"{toDoUser.UserName}, добро пожаловать в бот \"Мой график\"!";
             }
+        }
+        private string test(Update up)
+        {
+            var user = _userService.GetUserByTelegramId(up.Message.From.Id);
+            return $"Добрый день, {user.LastName} {user.FirstName}";
         }
     }
 }

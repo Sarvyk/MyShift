@@ -19,8 +19,8 @@ namespace MyShift.Models
         public ToDoUser User { get; set; }
 
         // Кто назначил (админ/модератор)
+        [ForeignKey("AssignedBy")]
         public int AssignedById { get; set; }
-        [ForeignKey("AssignedById")]
         public ToDoUser AssignedBy { get; set; }
 
         // Заявка на изменение (если есть)
