@@ -17,9 +17,11 @@ namespace MyShift
     internal class UpdateHandler : IUpdateHandler
     {
         private readonly IUserService _userService;
-        public UpdateHandler(IUserService service)
+        private readonly IScheduleRequestService _scheduleRequestService;
+        public UpdateHandler(IUserService userService, IScheduleRequestService schReqService)
         {
-            _userService = service;
+            _userService = userService;
+            _scheduleRequestService = schReqService;
         }
         public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {
@@ -28,6 +30,7 @@ namespace MyShift
 
         public Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
+            ToDoUser toDoUser;
             switch (update.Message.Text)
             {
                 case "/start":
@@ -37,15 +40,23 @@ namespace MyShift
                     botClient.SendMessage(update.Message.Chat, HelpCommand(update.Message.From));
                     break;
                 case "/график":
-                    break;
-                case string a when a.IndexOf("/изменить") == 0:
-                    if (CheckCredentials(update.Message.From, Role.Moderator | Role.Administrator,out string answer))
+                    if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
                     {
-                        Console.WriteLine(answer);
-                        botClient.SendMessage(update.Message.Chat, string.IsNullOrWhiteSpace(answer) ? "заглушка" : answer);
+                        botClient.SendMessage(update.Message.Chat, CreateRequest(toDoUser));
                     }
                     break;
+                case string a when a.IndexOf("/изменить") == 0:
+                    if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
+                    {
+                        botClient.SendMessage(update.Message.Chat, GetSchedule(toDoUser));
+                    }
+                    break;
+
                 case "/заявки":
+                    if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
+                    {
+                        botClient.SendMessage(update.Message.Chat, GetRequests(toDoUser));
+                    }
                     break;
                 default:
                     botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.\r\n{HelpCommand(update.Message.From)}");
@@ -66,29 +77,37 @@ namespace MyShift
                 return $"{toDoUser.UserName}, добро пожаловать в бот \"Мой график\"!";
             }
         }
-        //private string CreateRequest()
-        //{
-
-        //}
-        private bool CheckCredentials(User user, Role roles, out string answer)
+        private string GetSchedule(ToDoUser toDoUser)
         {
-            ToDoUser? toDoUser = _userService.GetUserByTelegramId(user.Id);
+            
+            return "";
+        }
+        private string CreateRequest(ToDoUser toDoUser)
+        {
+
+            return "";
+        }
+        private string GetRequests(ToDoUser toDoUser)
+        {
+
+            return "";
+        }
+        private bool CheckCredentials(User user, Role roles, out ToDoUser toDoUser)
+        {
+            toDoUser = _userService.GetUserByTelegramId(user.Id);
             if(toDoUser != null)
             {
                 if (roles.HasFlag(toDoUser.Role))
                 {
-                    answer = "";
                     return true;
                 }
                 else
                 {
-                    answer = "Вам не доступна эта команда!";
                     return false;
                 }
             }
             else
             {
-                answer = "Вы не зарегистрированы. Введите /start";
                 return false;
             }
         }

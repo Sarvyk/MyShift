@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MyShift.Services
 {
-    internal class ScheduleRequestService
+    internal class ScheduleRequestService : IScheduleRequestService
     {
     }
 }
