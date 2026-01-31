@@ -10,9 +10,8 @@ namespace MyShift.Services
 {
     internal interface IUserService
     {
-        //void RegisterUser(ToDoUser user);
-        ToDoUser? GetUser(int id);
-        ToDoUser? GetUserByTelegramId(long telegramId);
-        ToDoUser RegisterUser(User userData);
+        Task<ToDoUser?> GetUserAsync(int id);
+        Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId);
+        Task<ToDoUser> RegisterUserAsync(User userData);
     }
 }

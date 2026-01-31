@@ -10,6 +10,7 @@ namespace MyShift.Enums
     {
         Pending,
         Approved,
-        Rejected
+        Rejected,
+        Removed
     }
 }

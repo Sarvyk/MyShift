@@ -17,8 +17,10 @@ namespace MyShift
             var sqlContext = new SqLiteDbContext();
             var userRepository = new UserRepository(sqlContext);
             var userService = new UserService(userRepository);
-            var handle = new UpdateHandler(userService);
-            botClient.DeleteWebhook(true,CancellationToken.None);
+            var requestRepository = new RequestRepository(sqlContext);
+            var scheduleRepository = new ScheduleRepository(sqlContext);
+            var scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
+            var handle = new UpdateHandler(userService,scheduleRequestService);
             botClient.StartReceiving(handle);
             await Task.Delay(-1);
         }

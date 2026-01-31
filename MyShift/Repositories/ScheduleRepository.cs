@@ -14,17 +14,17 @@ namespace MyShift.Repositories
         {
             _context = context;
         }
-        public void CreateSchedule()
+        public async Task CreateScheduleAsync()
         {
             throw new NotImplementedException();
         }
 
-        public void DeleteSchedule()
+        public async Task DeleteScheduleAsync()
         {
             throw new NotImplementedException();
         }
 
-        public void EditShiftSchedule()
+        public async Task EditShiftScheduleAsync()
         {
             throw new NotImplementedException();
         }

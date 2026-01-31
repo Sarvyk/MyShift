@@ -25,5 +25,13 @@ namespace MyShift.Models
         public int? ProcessorKey { get; set; }  // Nullable - может быть не обработана
         [ForeignKey("ProcessorKey")]
         public ToDoUser? Processor { get; set; }
+        public Request() { }
+        public Request(int userId, string message)
+        {
+            CreatorKey = userId;
+            Message = message;
+            Status = RequestStatus.Pending;
+            CreatedAt = DateTime.Now;
+        }
     }
 }

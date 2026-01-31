@@ -10,8 +10,8 @@ namespace MyShift.Data
 {
     public interface IScheduleRepository
     {
-        void CreateSchedule();
-        void EditShiftSchedule();
-        void DeleteSchedule();
+        Task CreateScheduleAsync();
+        Task EditShiftScheduleAsync();
+        Task DeleteScheduleAsync();
     }
 }
