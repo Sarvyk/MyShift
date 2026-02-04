@@ -26,9 +26,9 @@ namespace MyShift.Services
             return await _userRepository.GetUserByTelegramIdAsync(telegramId);
         }
 
-        public async Task<ToDoUser?> RegisterUserAsync(User userData)
+        public async Task<ToDoUser?> RegisterUserAsync(long chatId, User userData)
         {
-            ToDoUser toDoUser = new ToDoUser(userData.Id, userData.Username, userData.FirstName, userData.LastName);
+            ToDoUser toDoUser = new ToDoUser(chatId, userData.Id, userData.Username, userData.FirstName, userData.LastName);
             await _userRepository.RegisterUserAsync(toDoUser);
             return toDoUser;
         }

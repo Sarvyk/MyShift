@@ -1,5 +1,7 @@
 ﻿using DotNetEnv;
 using MyShift.Data;
+using MyShift.Enums;
+using MyShift.Helpers;
 using MyShift.Repositories;
 using MyShift.Services;
 using Telegram.Bot;
@@ -14,13 +16,7 @@ namespace MyShift
             Env.Load();
             _token = Env.GetString("API_TOKEN");
             var botClient = new TelegramBotClient(_token);
-            var sqlContext = new SqLiteDbContext();
-            var userRepository = new UserRepository(sqlContext);
-            var userService = new UserService(userRepository);
-            var requestRepository = new RequestRepository(sqlContext);
-            var scheduleRepository = new ScheduleRepository(sqlContext);
-            var scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
-            var handle = new UpdateHandler(userService,scheduleRequestService);
+            var handle = new UpdateHandler();
             botClient.StartReceiving(handle);
             await Task.Delay(-1);
         }

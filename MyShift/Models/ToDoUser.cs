@@ -6,6 +6,7 @@ namespace MyShift.Models
     public class ToDoUser
     {
         public int Id { get; set; }
+        public long ChatId { get; set; }
         public long TelegramId { get; set; }
         public string? UserName { get; set; }
         public string? FirstName { get; set; }
@@ -18,8 +19,9 @@ namespace MyShift.Models
         public List<Request> ProcessedRequests { get; set; } = new(); // Обработанные заявки
         [InverseProperty("AssignedBy")]
         public List<Schedule> Schedules { get; set; } = new(); // Графики пользователя
-        public ToDoUser(long telegramId, string? userName, string? firstName, string? lastName)
+        public ToDoUser(long chatId,long telegramId, string? userName, string? firstName, string? lastName)
         {
+            ChatId = chatId;
             TelegramId = telegramId;
             UserName = userName;
             FirstName = firstName;

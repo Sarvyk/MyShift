@@ -33,5 +33,19 @@ namespace MyShift.Models
             Status = RequestStatus.Pending;
             CreatedAt = DateTime.Now;
         }
+        public string GetStatus()
+        {
+            switch (Status)
+            {
+                case RequestStatus.Pending:
+                    return "";
+                case RequestStatus.Approved:
+                    return "";
+                case RequestStatus.Rejected:
+                    return "";
+                default:
+                    return "нет статуса";
+            }
+        }
     }
 }

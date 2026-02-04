@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Data;
 using MyShift.Enums;
+using MyShift.Helpers;
 using MyShift.Models;
+using MyShift.Repositories;
 using MyShift.Services;
 using System;
 using System.Collections.Generic;
@@ -18,14 +21,20 @@ namespace MyShift
     {
         private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        public UpdateHandler(IUserService userService, IScheduleRequestService schReqService)
+        public UpdateHandler()
         {
+            var sqlContext = new SqLiteDbContext();
+            var userRepository = new UserRepository(sqlContext);
+            var userService = new UserService(userRepository);
+            var requestRepository = new RequestRepository(sqlContext);
+            var scheduleRepository = new ScheduleRepository(sqlContext);
+            var scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
             _userService = userService;
-            _scheduleRequestService = schReqService;
+            _scheduleRequestService = scheduleRequestService;
         }
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
-        {
-
+        {//добавил пока что обычный вывод, пока не знаю что ещё тут можно сделать.
+            Console.WriteLine(exception.Message);
         }
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -36,7 +45,7 @@ namespace MyShift
                 switch (update.Message.Text)
                 {
                     case "/start":
-                        botClient.SendMessage(update.Message.Chat, $"{StartCommand(update.Message.From)}\r\n{HelpCommand(update.Message.From)}");
+                        botClient.SendMessage(update.Message.Chat, $"{StartCommand(update.Message)}\r\n{HelpCommand(update.Message.From)}");
                         break;
                     case "/help":
                         botClient.SendMessage(update.Message.Chat, HelpCommand(update.Message.From));
@@ -53,7 +62,6 @@ namespace MyShift
                             botClient.SendMessage(update.Message.Chat, CreateRequest(toDoUser, a.Replace("/добавить заявку", "").Trim()));
                         }
                         break;
-
                     case "/заявки":
                         if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
                         {
@@ -71,13 +79,9 @@ namespace MyShift
                         break;
                 }
             }
-            catch (ArgumentException argEx)
-            {
-                botClient.SendMessage(update.Message.Chat, argEx.Message);
-            }
             catch(Exception ex)
             {
-                await HandleErrorAsync(botClient, ex, HandleErrorSource.HandleUpdateError, cancellationToken);
+                await HandleErrorAsync(botClient,ex,HandleErrorSource.HandleUpdateError, cancellationToken);
             }
         }
 
@@ -87,17 +91,17 @@ namespace MyShift
             return $"Запись №{number} удалена!";
         }
 
-        private string StartCommand(User user)
+        private string StartCommand(Message message)
         {
-            ToDoUser? toDoUser = _userService.GetUserByTelegramIdAsync(user.Id).Result;
+            ToDoUser? toDoUser = _userService.GetUserByTelegramIdAsync(message.From.Id).Result;
             if (toDoUser != null) 
             {
                 return "Бот уже запущен!";
             }
             else
             {
-                toDoUser = _userService.RegisterUserAsync(user).Result;
-                return $"{toDoUser.UserName}, добро пожаловать в бот \"Мой график\"!";
+                toDoUser = _userService.RegisterUserAsync(message.Chat.Id, message.From).Result;
+                return $"{toDoUser.FirstName}, добро пожаловать в бот \"Мой график\"!";
             }
         }
         private string GetSchedule(ToDoUser toDoUser)
@@ -119,7 +123,7 @@ namespace MyShift
                 Answer.AppendLine($"{toDoUser.FirstName}, вот список ваших заявок:");
                 foreach (Request req in _scheduleRequestService.GetRequestsAsync(toDoUser.Id).Result)
                 {
-                    Answer.AppendLine($"{req.Id}) текст:{req.Message}; статус:{req.Status.ToString()}");
+                    Answer.AppendLine($"{req.Id}) текст заявки:{req.Message}; статус:{req.Status.GetDisplayName()}");
                 }
                 return Answer.ToString();
             }
@@ -163,10 +167,6 @@ namespace MyShift
             }
             else
                 return @"Вот список доступных комманд:/start, /help";
-        }
-        private void Validate()
-        {
-
         }
     }
 }
