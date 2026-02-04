@@ -123,7 +123,7 @@ namespace MyShift
                 Answer.AppendLine($"{toDoUser.FirstName}, вот список ваших заявок:");
                 foreach (Request req in _scheduleRequestService.GetRequestsAsync(toDoUser.Id).Result)
                 {
-                    Answer.AppendLine($"{req.Id}) текст заявки:{req.Message}; статус:{req.Status.GetDisplayName()}");
+                    Answer.AppendLine($"{req.Id}) Сообщение:{req.Message}; Статус:{req.Status.GetDisplayName()}");
                 }
                 return Answer.ToString();
             }

@@ -12,20 +12,19 @@ namespace MyShift.Models
     public class Schedule
     {
         public int Id { get; set; }
-        public DateTime Date { get; set; }  // Конкретный день
-
         // Связь с пользователем
+        public DateTime Date { get; set; }  // Конкретный день
+        public DateTime StartTime { get; set; } //Начало рабочего дня
+        public DateTime EndTime { get; set; }
+        // Чей график
         public int UserId { get; set; }
+        [ForeignKey("UserId")]
         public ToDoUser User { get; set; }
-
         // Кто назначил (админ/модератор)
-        [ForeignKey("AssignedBy")]
         public int AssignedById { get; set; }
+        [ForeignKey("AssignedById")]
         public ToDoUser AssignedBy { get; set; }
-
-        // Заявка на изменение (если есть)
-        public int? ChangeRequestId { get; set; }
-        [ForeignKey("ChangeRequestId")]
-        public Request? ChangeRequest { get; set; }
+        //статус смены.
+        public bool Is_Cancelled { get; set; } = false;
     }
 }

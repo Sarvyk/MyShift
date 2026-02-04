@@ -37,12 +37,13 @@ namespace MyShift.Repositories
 
         public async Task<Request?> GetRequestAsync(int userId, int requestId)
         {
-            return await _context.Requests.FirstOrDefaultAsync(req => req.CreatorKey == userId && req.Id == requestId);
+            return await _context.Requests.FirstOrDefaultAsync(req => req.CreatorId == userId && req.Id == requestId);
         }
 
         public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId)
         {
-            return await _context.Requests.Where(req => req.CreatorKey == userId).ToListAsync();
+            return await _context.Requests.Where(req => req.CreatorId == userId
+            && req.Status != RequestStatus.Removed).ToListAsync();
         }
 
         public Task RejectRequestAsync()

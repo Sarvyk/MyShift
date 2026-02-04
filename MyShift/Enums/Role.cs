@@ -10,8 +10,8 @@ namespace MyShift.Enums
     public enum Role
     {
         None = 0,
-        User = 1 << 1,
-        Moderator = 1 << 2,
-        Administrator = 1 << 3
+        User = 1,
+        Moderator = 1 << 1,
+        Administrator = 1 << 2
     }
 }

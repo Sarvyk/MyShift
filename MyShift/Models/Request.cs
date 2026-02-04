@@ -17,21 +17,21 @@ namespace MyShift.Models
         public string? ResolutionComment { get; set; } // Комментарий при обработке
 
         // Связь с создателем
-        public int CreatorKey { get; set; }
-        [ForeignKey("CreatorKey")]
+        public int CreatorId { get; set; }
+        [ForeignKey("CreatorId")]
         public ToDoUser Creator { get; set; }
 
         // Связь с обработавшим (админ/модератор)
-        public int? ProcessorKey { get; set; }  // Nullable - может быть не обработана
-        [ForeignKey("ProcessorKey")]
+        public int? ProcessorId { get; set; }  // Nullable - может быть не обработана
+        [ForeignKey("ProcessorId")]
         public ToDoUser? Processor { get; set; }
         public Request() { }
         public Request(int userId, string message)
         {
-            CreatorKey = userId;
+            CreatorId = userId;
             Message = message;
             Status = RequestStatus.Pending;
-            CreatedAt = DateTime.Now;
+            CreatedAt = DateTime.UtcNow;
         }
         public string GetStatus()
         {
