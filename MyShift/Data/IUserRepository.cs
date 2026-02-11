@@ -9,8 +9,8 @@ namespace MyShift.Data
 {
     public interface IUserRepository
     {
-        Task RegisterUserAsync(ToDoUser user);
-        Task<ToDoUser> GetUserByIdAsync(int id);
-        Task<ToDoUser> GetUserByTelegramIdAsync(long id);
+        Task RegisterUserAsync(ToDoUser user, CancellationToken ct);
+        Task<ToDoUser?> GetUserByIdAsync(int id, CancellationToken ct);
+        Task<ToDoUser?> GetUserByTelegramIdAsync(long id, CancellationToken ct);
     }
 }

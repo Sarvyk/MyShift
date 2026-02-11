@@ -21,6 +21,8 @@ namespace MyShift.Models
         public List<Schedule> UsersSchedules {get;set;} = new();//Все графики конкретно этого пользователя
         [InverseProperty("AssignedBy")]
         public List<Schedule> Schedules { get; set; } = new(); // Графики пользователя, которые назначал данные пользователь(модератор, админ)
+        [InverseProperty("CreatorBy")]
+        public List<Schedule_Template> Schedule_Templates { get; set; } = new();
         public ToDoUser(long chatId,long telegramId, string? userName, string? firstName, string? lastName)
         {
             ChatId = chatId;

@@ -10,34 +10,39 @@ namespace MyShift.Services
 {
     internal class ScheduleRequestService : IScheduleRequestService
     {
-        IRequestRepository _requestRepository;
-        IScheduleRepository _scheduleRepository;
+        private readonly IRequestRepository _requestRepository;
+        private readonly IScheduleRepository _scheduleRepository;
         public ScheduleRequestService(IRequestRepository requestRepository, IScheduleRepository scheduleRepository)
         {
             _requestRepository = requestRepository;
             _scheduleRepository = scheduleRepository;
         }
-        public async Task CreateRequestAsync(int userId, string message)
+        public async Task CreateRequestAsync(int userId, string message, CancellationToken ct)
         {
             ValidateString(message);
             Request request = new Request(userId, message);
-            await _requestRepository.CreateRequestAsync(request);
+            await _requestRepository.CreateRequestAsync(request,ct);
         }
 
-        public async Task DeleteRequestAsync(int userId, string numberRequest)
+        public async Task CreateScheduleTemplateAsync(Schedule_Template schTemplate, CancellationToken ct)
         {
-            if(_requestRepository.GetRequestAsync(userId, ValidateInt(numberRequest)).Result != null)
+            await _scheduleRepository.CreateScheduleTemplateAsync(schTemplate, ct);
+        }
+
+        public async Task DeleteRequestAsync(int userId, string numberRequest, CancellationToken ct)
+        {
+            if(await _requestRepository.GetRequestAsync(userId, ValidateInt(numberRequest),ct) != null)
             {
-                await _requestRepository.DeleteRequestAsync(ValidateInt(numberRequest));
+                await _requestRepository.DeleteRequestAsync(ValidateInt(numberRequest),ct);
             }
         }
 
-        public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId)
+        public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct)
         {
-            return _requestRepository.GetRequestsAsync(userId).Result;
+            return await _requestRepository.GetRequestsAsync(userId,ct);
         }
 
-        public async Task GetScheduleAsync(ToDoUser toDoUser)
+        public async Task GetScheduleAsync(ToDoUser toDoUser, CancellationToken ct)
         {//Тут нужно подумать. Пока что не очень понимаю как сделать лучше.
             throw new NotImplementedException();
         }
@@ -50,10 +55,11 @@ namespace MyShift.Services
             else
                 throw new ArgumentException("Строка не должна быть пустой и должна состоять из цифр");
         }
-        private void ValidateString(string? str)
+        public void ValidateString(string? str)
         {
             if (string.IsNullOrWhiteSpace(str))
                 throw new ArgumentException("Строка не должна быть пустой");
         }
+
     }
 }

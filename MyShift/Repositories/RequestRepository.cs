@@ -17,36 +17,36 @@ namespace MyShift.Repositories
         {
             _context = context;
         }
-        public Task ApproveRequestAsync()
+        public Task ApproveRequestAsync(CancellationToken ct)
         {
             throw new NotImplementedException();
         }
 
-        public async Task CreateRequestAsync(Request request)
+        public async Task CreateRequestAsync(Request request, CancellationToken ct)
         {
-            await _context.Requests.AddAsync(request);
+            await _context.Requests.AddAsync(request, ct);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteRequestAsync(int requestId)
+        public async Task DeleteRequestAsync(int requestId, CancellationToken ct)
         {
-            Request request = await _context.Requests.FindAsync(requestId);
+            Request? request = await _context.Requests.FindAsync(requestId);
             request.Status = RequestStatus.Removed;
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Request?> GetRequestAsync(int userId, int requestId)
+        public async Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct)
         {
             return await _context.Requests.FirstOrDefaultAsync(req => req.CreatorId == userId && req.Id == requestId);
         }
 
-        public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId)
+        public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId , CancellationToken ct)
         {
             return await _context.Requests.Where(req => req.CreatorId == userId
             && req.Status != RequestStatus.Removed).ToListAsync();
         }
 
-        public Task RejectRequestAsync()
+        public Task RejectRequestAsync(CancellationToken ct)
         {
             throw new NotImplementedException();
         }

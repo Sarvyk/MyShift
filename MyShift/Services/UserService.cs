@@ -16,20 +16,20 @@ namespace MyShift.Services
         {
             _userRepository = repository;
         }
-        public async Task<ToDoUser?> GetUserAsync(int id)
+        public async Task<ToDoUser?> GetUserAsync(int id, CancellationToken ct)
         {
-            return await _userRepository.GetUserByIdAsync(id);
+            return await _userRepository.GetUserByIdAsync(id,ct);
         }
 
-        public async Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId)
+        public async Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken ct)
         {
-            return await _userRepository.GetUserByTelegramIdAsync(telegramId);
+            return await _userRepository.GetUserByTelegramIdAsync(telegramId, ct);
         }
 
-        public async Task<ToDoUser?> RegisterUserAsync(long chatId, User userData)
+        public async Task<ToDoUser?> RegisterUserAsync(long chatId, User userData, CancellationToken ct)
         {
             ToDoUser toDoUser = new ToDoUser(chatId, userData.Id, userData.Username, userData.FirstName, userData.LastName);
-            await _userRepository.RegisterUserAsync(toDoUser);
+            await _userRepository.RegisterUserAsync(toDoUser, ct);
             return toDoUser;
         }
     }

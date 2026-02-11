@@ -16,20 +16,20 @@ namespace MyShift.Repositories
         {
             _context = context;
         }
-        public async Task RegisterUserAsync(ToDoUser user)
+        public async Task RegisterUserAsync(ToDoUser user, CancellationToken ct)
         {
-            await _context.Users.AddAsync(user);
+            await _context.Users.AddAsync(user, ct);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<ToDoUser> GetUserByIdAsync(int id)
+        public async Task<ToDoUser?> GetUserByIdAsync(int id, CancellationToken ct)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
         }
 
-        public async Task<ToDoUser> GetUserByTelegramIdAsync(long telegramId)
+        public async Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken ct)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId);
+            return await _context.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId,ct);
         }
     }
 }

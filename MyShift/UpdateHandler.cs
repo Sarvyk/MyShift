@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Abstracts;
 using MyShift.Data;
 using MyShift.Enums;
 using MyShift.Helpers;
@@ -8,6 +9,7 @@ using MyShift.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -21,6 +23,7 @@ namespace MyShift
     {
         private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
+        private readonly Dictionary<long, Dialog> _waitMessage = [];
         public UpdateHandler()
         {
             var sqlContext = new SqLiteDbContext();
@@ -39,100 +42,143 @@ namespace MyShift
 
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            ToDoUser toDoUser;
             try
             {
-                switch (update.Message.Text)
+                if (update.Message.Text.StartsWith('/'))
                 {
-                    case "/start":
-                        botClient.SendMessage(update.Message.Chat, $"{StartCommand(update.Message)}\r\n{HelpCommand(update.Message.From)}");
-                        break;
-                    case "/help":
-                        botClient.SendMessage(update.Message.Chat, HelpCommand(update.Message.From));
-                        break;
-                    case "/график":
-                        if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
-                        {
-                            //botClient.SendMessage(update.Message.Chat, CreateRequest(toDoUser));
-                        }
-                        break;
-                    case string a when a.IndexOf("/добавить заявку") == 0:
-                        if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
-                        {
-                            botClient.SendMessage(update.Message.Chat, CreateRequest(toDoUser, a.Replace("/добавить заявку", "").Trim()));
-                        }
-                        break;
-                    case "/заявки":
-                        if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
-                        {
-                            botClient.SendMessage(update.Message.Chat, GetRequests(toDoUser));
-                        }
-                        break;
-                    case string a when a.IndexOf("/удалить заявку") == 0:
-                        if (CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, out toDoUser))
-                        {
-                            botClient.SendMessage(update.Message.Chat, DeleteRequest(toDoUser, a.Replace("/удалить заявку", "").Trim()));
-                        }
-                        break;
-                    default:
-                        botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.\r\n{HelpCommand(update.Message.From)}");
-                        break;
+                    ResetWaitMessage(update.Message.Chat.Id);//если у нас есть ожидание диалога, то при попадании в эту секцию кода мы удаляем это ожидание.
+                    switch (update.Message.Text)
+                    {
+                        case "/start":
+                            await StartCommand(botClient, update, cancellationToken);
+                            await HelpCommand(botClient, update, cancellationToken);
+                            break;
+                        case "/help":
+                            await HelpCommand(botClient, update, cancellationToken);
+                            break;
+                        case "/график":
+                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                            {
+
+                            }
+                            break;
+                        case "/создать график":
+
+                            break;
+                        case "/создать шаблон":
+                            await botClient.SendMessage(update.Message.Chat, "Для создания шаблона необъодимо ввести имя шаблона, время и дни работы. Введите название шаблона.");
+                            int id = (await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken)).Id;
+                            await AddNewDialog(update.Message.Chat.Id, new DialogCreateTemplate(botClient, update, new ScheduleBuilder(_scheduleRequestService, id)));
+                            break;
+                        case string a when a.StartsWith("/добавить заявку"):
+                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                            {
+                                await CreateRequest(botClient, update, a.Replace("/добавить заявку", "").Trim(), cancellationToken);
+                            }
+                            break;
+                        case "/заявки":
+                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                            {
+                                await GetRequests(botClient, update, cancellationToken);
+                            }
+                            break;
+                        case string a when a.StartsWith("/удалить заявку"):
+                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                            {
+                                await DeleteRequest(botClient, update, a.Replace("/удалить заявку", "").Trim(), cancellationToken);
+                            }
+                            break;
+                        default:
+                            await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: cancellationToken);
+                            await HelpCommand(botClient, update, cancellationToken);
+                            break;
+                    }
+                }
+                else if(_waitMessage.ContainsKey(update.Message.Chat.Id))
+                {
+                    bool result = await _waitMessage[update.Message.Chat.Id].NextStep(update.Message.Text, cancellationToken);
+                    if(result)
+                        _waitMessage.Remove(update.Message.Chat.Id);
                 }
             }
-            catch(Exception ex)
+            catch (FormatException ex)
             {
-                await HandleErrorAsync(botClient,ex,HandleErrorSource.HandleUpdateError, cancellationToken);
+                await botClient.SendMessage(update.Message.Chat, ex.Message, cancellationToken: cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                await HandleErrorAsync(botClient, ex, HandleErrorSource.HandleUpdateError, cancellationToken);
             }
         }
 
-        private string DeleteRequest(ToDoUser toDoUser, string number)
+        private void ResetWaitMessage(long chatId)
         {
-            _scheduleRequestService.DeleteRequestAsync(toDoUser.Id, number);
-            return $"Запись №{number} удалена!";
+            if(_waitMessage.ContainsKey(chatId))
+                _waitMessage.Remove(chatId);
         }
 
-        private string StartCommand(Message message)
+        private async Task AddNewDialog(long chatId, Dialog dialog)
         {
-            ToDoUser? toDoUser = _userService.GetUserByTelegramIdAsync(message.From.Id).Result;
+            if(_waitMessage.ContainsKey(chatId))
+                _waitMessage.Remove(chatId);
+            else
+                _waitMessage.Add(chatId, dialog);
+        }
+        private async Task DeleteRequest(ITelegramBotClient botClient, Update update, string number, CancellationToken ct)
+        {
+            ToDoUser? user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id,ct);
+            await _scheduleRequestService.DeleteRequestAsync(user.Id, number, ct);
+            await botClient.SendMessage(update.Message.Chat, $"Запись №{number} удалена!",cancellationToken:ct);
+        }
+
+        private async Task StartCommand(ITelegramBotClient botClient,Update update, CancellationToken ct)
+        {
+            ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
             if (toDoUser != null) 
             {
-                return "Бот уже запущен!";
+                await botClient.SendMessage(update.Message.Chat,"Бот уже запущен!",cancellationToken: ct);
             }
             else
             {
-                toDoUser = _userService.RegisterUserAsync(message.Chat.Id, message.From).Result;
-                return $"{toDoUser.FirstName}, добро пожаловать в бот \"Мой график\"!";
+                toDoUser = await _userService.RegisterUserAsync(update.Message.Chat.Id, update.Message.From, ct);
+                await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот \"Мой график\"!", cancellationToken: ct);
             }
+        }
+        private void CreateTemplateSchedule()
+        {
+
         }
         private string GetSchedule(ToDoUser toDoUser)
         {
             
             return "";
         }
-        private string CreateRequest(ToDoUser toDoUser, string message)
+        private async Task CreateRequest(ITelegramBotClient botClient, Update update, string message, CancellationToken ct)
         {
-            _scheduleRequestService.CreateRequestAsync(toDoUser.Id, message);
-            return "Заявка добавлена";
+            ToDoUser? user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
+            await _scheduleRequestService.CreateRequestAsync(user.Id, message, ct);
+            await botClient.SendMessage(update.Message.Chat,"Заявка добавлена", cancellationToken:ct);
         }
-        private string GetRequests(ToDoUser toDoUser)
+        private async Task GetRequests(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
-            StringBuilder Answer = new StringBuilder();
-            var queryResult = _scheduleRequestService.GetRequestsAsync(toDoUser.Id).Result;
+            ToDoUser? user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
+            StringBuilder Answer = new();
+            var queryResult = await _scheduleRequestService.GetRequestsAsync(user.Id, ct);
             if (queryResult.Count > 0)
             {
-                Answer.AppendLine($"{toDoUser.FirstName}, вот список ваших заявок:");
-                foreach (Request req in _scheduleRequestService.GetRequestsAsync(toDoUser.Id).Result)
+                Answer.AppendLine($"{user.FirstName}, вот список ваших заявок:");
+                foreach (Request req in await _scheduleRequestService.GetRequestsAsync(user.Id,ct))
                 {
                     Answer.AppendLine($"{req.Id}) Сообщение:{req.Message}; Статус:{req.Status.GetDisplayName()}");
                 }
-                return Answer.ToString();
+                await botClient.SendMessage(update.Message.Chat,Answer.ToString(),cancellationToken:ct);
             }
-            else 
-                return $"{toDoUser.FirstName}, у вас нет заявок!";
+            else
+                await botClient.SendMessage(update.Message.Chat, $"{user.FirstName}, у вас нет заявок!", cancellationToken:ct);
         }
-        private bool CheckCredentials(User user, Role roles, out ToDoUser toDoUser)
+        private async Task<bool> CheckCredentials(User user, Role roles, CancellationToken ct)
         {
-            toDoUser = _userService.GetUserByTelegramIdAsync(user.Id).Result;
+            ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(user.Id,ct);
             if(toDoUser != null)
             {
                 if (roles.HasFlag(toDoUser.Role))
@@ -149,24 +195,24 @@ namespace MyShift
                 return false;
             }
         }
-        private string HelpCommand(User user)
+        private async Task HelpCommand(ITelegramBotClient botClient,Update update, CancellationToken ct)
         {
-            ToDoUser? toDoUser = _userService.GetUserByTelegramIdAsync(user.Id).Result;
+            ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
             if (toDoUser != null)
             {
                 if (toDoUser.Role == Role.Administrator)
-                    return @"Список команд:заглушка";
+                    await botClient.SendMessage(update.Message.Chat,@"Список команд:заглушка",cancellationToken:ct);
                 else if (toDoUser.Role == Role.Moderator)
-                    return @"Список команд:заглушка";
+                    await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
-                    return @"Список команд:
+                    await botClient.SendMessage(update.Message.Chat, @"Список команд:
 /график - показывает текущий график; 
 /добавить заявку [описание] - создаёт заявку на смену расписания,
 /заявки - выводит список заявок
-/удалить заявку [номер] - удаляет заявку по заданному номеру";
+/удалить заявку [номер] - удаляет заявку по заданному номеру", cancellationToken: ct);
             }
             else
-                return @"Вот список доступных комманд:/start, /help";
+                await botClient.SendMessage(update.Message.Chat, @"Вот список доступных комманд:/start, /help", cancellationToken: ct);
         }
     }
 }

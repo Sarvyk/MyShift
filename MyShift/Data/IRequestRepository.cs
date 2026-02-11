@@ -9,11 +9,11 @@ namespace MyShift.Data
 {
     public interface IRequestRepository
     {
-        Task CreateRequestAsync(Request request);
-        Task<IReadOnlyList<Request>> GetRequestsAsync(int userId);
-        Task<Request?> GetRequestAsync(int userId, int requestId);
-        Task ApproveRequestAsync();
-        Task RejectRequestAsync();
-        Task DeleteRequestAsync(int requestId);
+        Task CreateRequestAsync(Request request, CancellationToken ct);
+        Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct);
+        Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct);
+        Task ApproveRequestAsync( CancellationToken ct);
+        Task RejectRequestAsync( CancellationToken ct);
+        Task DeleteRequestAsync(int requestId, CancellationToken ct);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MyShift.Data;
+using MyShift.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,17 +15,23 @@ namespace MyShift.Repositories
         {
             _context = context;
         }
-        public async Task CreateScheduleAsync()
+        public async Task CreateScheduleAsync(CancellationToken ct)
         {
             throw new NotImplementedException();
         }
 
-        public async Task DeleteScheduleAsync()
+        public async Task CreateScheduleTemplateAsync(Schedule_Template schTemplate, CancellationToken ct)
+        {
+            await _context.AddAsync(schTemplate,ct);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteScheduleAsync(CancellationToken ct)
         {
             throw new NotImplementedException();
         }
 
-        public async Task EditShiftScheduleAsync()
+        public async Task EditShiftScheduleAsync(CancellationToken ct)
         {
             throw new NotImplementedException();
         }

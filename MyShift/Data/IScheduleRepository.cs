@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +11,9 @@ namespace MyShift.Data
 {
     public interface IScheduleRepository
     {
-        Task CreateScheduleAsync();
-        Task EditShiftScheduleAsync();
-        Task DeleteScheduleAsync();
+        Task CreateScheduleAsync(CancellationToken ct);
+        Task CreateScheduleTemplateAsync(Schedule_Template schTemplate, CancellationToken ct);
+        Task EditShiftScheduleAsync( CancellationToken ct);
+        Task DeleteScheduleAsync( CancellationToken ct);
     }
 }

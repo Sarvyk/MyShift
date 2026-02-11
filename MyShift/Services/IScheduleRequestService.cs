@@ -9,9 +9,10 @@ namespace MyShift.Services
 {
     internal interface IScheduleRequestService
     {
-        Task CreateRequestAsync(int userId, string message);
-        Task DeleteRequestAsync(int id, string number);
-        Task<IReadOnlyList<Request>> GetRequestsAsync(int userId);
-        Task GetScheduleAsync(ToDoUser toDoUser);
+        Task CreateRequestAsync(int userId, string message, CancellationToken ct);
+        Task CreateScheduleTemplateAsync(Schedule_Template sch_template, CancellationToken ct);
+        Task DeleteRequestAsync(int id, string number, CancellationToken ct);
+        Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct);
+        Task GetScheduleAsync(ToDoUser toDoUser,CancellationToken ct);
     }
 }
