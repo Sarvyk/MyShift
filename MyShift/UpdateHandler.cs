@@ -47,7 +47,7 @@ namespace MyShift
             {
                 if (update.Message.Text.StartsWith('/'))
                 {
-                    ResetWaitMessage(update.Message.Chat.Id);//если у нас есть ожидание диалога, то при попадании в эту секцию кода мы удаляем это ожидание.
+                    ResetWaitMessage(update.Message.Chat.Id);//если у нас есть ожидание диалога, то при попадании в эту секцию кода мы удаляем это ожидание т.к. ввелась команда.
                     switch (update.Message.Text)
                     {
                         case "/start":
@@ -112,6 +112,10 @@ namespace MyShift
                         _waitMessage.Remove(update.Message.Chat.Id);
                 }
             }
+            catch (IndexOutOfRangeException ex)
+            {
+                await botClient.SendMessage(update.Message.Chat, ex.Message, cancellationToken: cancellationToken);
+            }
             catch (FormatException ex)
             {
                 await botClient.SendMessage(update.Message.Chat, ex.Message, cancellationToken: cancellationToken);
@@ -124,13 +128,13 @@ namespace MyShift
         private async Task PrintUserList(ITelegramBotClient botClient, Update update, IReadOnlyList<ToDoUser> users, CancellationToken ct)
         {
             StringBuilder sb = new StringBuilder();
-            int i = 0;
+            int i = 1;
             foreach (ToDoUser user in users)
             {
                 string nickname = user.UserName != null ? $"{user.UserName};" : "";
                 string firstname = user.FirstName != null ? $"{user.FirstName};" : "";
                 string lastname = user.LastName != null ? $"{user.LastName};" : "";
-                sb.AppendLine($"{i++}){nickname}{firstname}{lastname}");
+                sb.AppendLine($"{i++}){nickname}; {lastname} {firstname}");
             }
             await botClient.SendMessage(update.Message.Chat, $"{sb.ToString()}", cancellationToken:ct);
         }

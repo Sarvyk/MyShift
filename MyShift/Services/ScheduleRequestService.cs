@@ -32,7 +32,7 @@ namespace MyShift.Services
             await _scheduleRepository.InsertSchedule_Template(new ScheduleTemplate_Schedule(template, schedule), ct);
             List<Schedule> schedules = new List<Schedule>();
             HashSet<string> Weeks = EnumBitConverter.GetEnumFromBitToMass(template.DaysOfWeekBits);
-            DateTime date = DateTime.Now;
+            DateTime date = DateTime.Now.AddDays(1);
             int month = 6;
             for (int i = 0; i < month; i++)
             {
