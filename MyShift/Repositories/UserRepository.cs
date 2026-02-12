@@ -16,10 +16,11 @@ namespace MyShift.Repositories
         {
             _context = context;
         }
-        public async Task RegisterUserAsync(ToDoUser user, CancellationToken ct)
+        public async Task<ToDoUser> RegisterUserAsync(ToDoUser user, CancellationToken ct)
         {
             await _context.Users.AddAsync(user, ct);
             await _context.SaveChangesAsync();
+            return user;
         }
 
         public async Task<ToDoUser?> GetUserByIdAsync(int id, CancellationToken ct)
@@ -30,6 +31,11 @@ namespace MyShift.Repositories
         public async Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken ct)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId,ct);
+        }
+
+        public async Task<IReadOnlyList<ToDoUser>> GetAllUsersAsync(CancellationToken ct)
+        {
+            return await _context.Users.ToListAsync(cancellationToken:ct);
         }
     }
 }

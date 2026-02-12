@@ -11,8 +11,13 @@ namespace MyShift.Data
 {
     public interface IScheduleRepository
     {
-        Task CreateScheduleAsync(CancellationToken ct);
-        Task CreateScheduleTemplateAsync(Schedule_Template schTemplate, CancellationToken ct);
+        Task<Schedule?> InsertScheduleAsync(Schedule schedule, CancellationToken ct);
+        Task InsertScheduleRangeAsync(List<Schedule> schedules, CancellationToken ct);
+        Task InsertSchedule_Template(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct);
+        Task<Schedule?> GetSchedule(int scheduleId, CancellationToken ct);
+        Task<ScheduleTemplate?> GetScheduleTemplateAsync(int templateId, CancellationToken ct);
+        Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates();
+        Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct);
         Task EditShiftScheduleAsync( CancellationToken ct);
         Task DeleteScheduleAsync( CancellationToken ct);
     }

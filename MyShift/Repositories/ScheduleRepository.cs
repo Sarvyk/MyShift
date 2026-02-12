@@ -1,4 +1,5 @@
-﻿using MyShift.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Data;
 using MyShift.Models;
 using System;
 using System.Collections.Generic;
@@ -15,15 +16,27 @@ namespace MyShift.Repositories
         {
             _context = context;
         }
-        public async Task CreateScheduleAsync(CancellationToken ct)
+        public async Task<Schedule?> InsertScheduleAsync(Schedule schedule, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            await _context.Schedules.AddAsync(schedule, ct);
+            await _context.SaveChangesAsync(ct);
+            return await GetSchedule(schedule.Id, ct);
         }
-
-        public async Task CreateScheduleTemplateAsync(Schedule_Template schTemplate, CancellationToken ct)
+        public async Task InsertScheduleRangeAsync(List<Schedule> schedules, CancellationToken ct)
+        {
+            await _context.Schedules.AddRangeAsync(schedules, ct);
+            await _context.SaveChangesAsync();
+        }
+        public async Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct)
         {
             await _context.AddAsync(schTemplate,ct);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task InsertSchedule_Template(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct)
+        {
+            await _context.AddAsync(templ_schedule);
+            await _context.SaveChangesAsync(ct);
         }
 
         public async Task DeleteScheduleAsync(CancellationToken ct)
@@ -34,6 +47,21 @@ namespace MyShift.Repositories
         public async Task EditShiftScheduleAsync(CancellationToken ct)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates()
+        {
+            return await _context.Schedule_Templates.ToListAsync();
+        }
+
+        public async Task<Schedule?> GetSchedule(int id, CancellationToken ct)
+        {
+            return await _context.Schedules.FirstOrDefaultAsync(schId => schId.Id == id, cancellationToken: ct);
+        }
+
+        public async Task<ScheduleTemplate?> GetScheduleTemplateAsync(int id, CancellationToken ct)
+        {
+            return _context.Schedule_Templates.FirstOrDefault(tmp => tmp.Id == id);
         }
     }
 }

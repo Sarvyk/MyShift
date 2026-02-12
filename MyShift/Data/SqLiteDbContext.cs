@@ -18,7 +18,8 @@ namespace MyShift.Data
         public DbSet<ToDoUser> Users { get; set; }
         public DbSet<Request> Requests { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
-        public DbSet<Schedule_Template> Schedule_Templates { get; set; }
+        public DbSet<ScheduleTemplate> Schedule_Templates { get; set; }
+        public DbSet<ScheduleTemplate_Schedule> ToDoUser_ScheduleTemplates { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlite($"Data Source=./mydb.db");
     }
 }

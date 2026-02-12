@@ -1,21 +1,20 @@
-﻿using MyShift.Abstracts;
-using MyShift.Enums;
+﻿using MyShift.Enums;
 using MyShift.Helpers;
 using MyShift.Models;
+using MyShift.Services;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace MyShift.Services
+namespace MyShift.Dialogs
 {
-    internal class DialogCreateTemplate : Dialog
+    internal class DialogCreateTemplate : Dialog<CreateScheduleTemplateStage>
     {
-        private Stage _stage;
-        private ScheduleBuilder _scheduleBuilder;
-        public DialogCreateTemplate(ITelegramBotClient botClient, Update update, ScheduleBuilder scheduleBuilder) : base(botClient, update)
+        private readonly ScheduleBuilder _builder;
+        public DialogCreateTemplate(ITelegramBotClient botClient, Update update, ScheduleBuilder scheduleBuilder, IScheduleRequestService schReqService) : base(botClient, update, schReqService)
         {
-            _scheduleBuilder = scheduleBuilder;
+            _builder = scheduleBuilder;
         }
 
         public override async Task<bool> NextStep(string? message, CancellationToken ct)
@@ -23,24 +22,24 @@ namespace MyShift.Services
             Validate(message);
             switch (_stage)
             {
-                case Stage.Name:
-                    _scheduleBuilder.AddName(message);
+                case CreateScheduleTemplateStage.Name:
+                    _builder.AddNameTemplate(message);
                     _stage++;
                     await _botClient.SendMessage(_update.Message.Chat, $"Укажите время начала рабочего дня в формате \"08:00\"", cancellationToken: ct);
                     return false;
-                case Stage.TimeBeg:
-                    _scheduleBuilder.AddStartTime(TimeSpan.Parse(message));
+                case CreateScheduleTemplateStage.TimeBeg:
+                    _builder.AddStartTimeTemplate(TimeSpan.Parse(message));
                     _stage++;
                     await _botClient.SendMessage(_update.Message.Chat, $"Укажите время окончания рабочего дня в формате \"08:00\"", cancellationToken: ct);
                     return false;
-                case Stage.TimeEnd:
-                    _scheduleBuilder.AddEndTime(TimeSpan.Parse(message));
+                case CreateScheduleTemplateStage.TimeEnd:
+                    _builder.AddEndTimeTemplate(TimeSpan.Parse(message));
                     _stage++;
                     await _botClient.SendMessage(_update.Message.Chat, $"Укажите дни недели в формате \"Пн,Вт,Ср,Чт,Пт,Сб,Вс\"", cancellationToken: ct);
                     return false;
-                case Stage.Weekday:
-                    _scheduleBuilder.AddDaysOfWeek(((int)GetBitStr(message.ToLower())).ToString());
-                    await _scheduleBuilder.AddToDataBase(ct);
+                case CreateScheduleTemplateStage.Weekday:
+                    _builder.AddDaysOfWeekTemplate(EnumBitConverter.GetFromEnumToBit(message.ToLower()));
+                    await _scheduleRequestService.InsertScheduleTemplateAsync(_builder.GetTemplate(), ct);
                     await _botClient.SendMessage(_update.Message.Chat, $"Шаблон добавлен!", cancellationToken: ct);
                     break;
             }
@@ -52,19 +51,19 @@ namespace MyShift.Services
             TimeSpan resultBeg = new TimeSpan();
             switch (_stage)
             {//проверяем по маске ввод. TryParse сделан, чтобы сделать ещё проверку на часы.
-                case Stage.TimeBeg:
+                case CreateScheduleTemplateStage.TimeBeg:
                     if (!Regex.IsMatch(str,@"^[0-9]{1,2}:[0-9]{2}$") || !TimeSpan.TryParse(str, out resultBeg) || resultBeg.TotalHours>24 || resultBeg.TotalHours<0)
                     {
                         throw new FormatException("Не правильный ответ. Пример правильного ввода:\"8:15\"");
                     }
                     break;
-                case Stage.TimeEnd:
+                case CreateScheduleTemplateStage.TimeEnd:
                     if (!Regex.IsMatch(str, @"^[0-9]{1,2}:[0-9]{2}$") || !TimeSpan.TryParse(str, out resultBeg) || resultBeg.TotalHours > 24 || resultBeg.TotalHours < 0)
                     {
                         throw new FormatException("Не правильный ответ. Пример правильного ввода:\"8:15\"");
                     }
                     break;
-                case Stage.Weekday:
+                case CreateScheduleTemplateStage.Weekday:
                     string[] weekDays = str.Split(',');
                     if (weekDays.Length > 7)
                         throw new FormatException("Дней недели не может быть больше 7");
@@ -86,24 +85,12 @@ namespace MyShift.Services
                     break;
             }
         }
-        private Weekday GetBitStr(string weekDayStr)
-        {//тут происходит образование строки через флаги по ShortName атрибуту.
-            Weekday result = Weekday.none;
-            Weekday[] weekDays = Enum.GetValues(typeof(Weekday)).Cast<Weekday>().Where(week => week != Weekday.none).ToArray();
-            string[] weekDaysMass = weekDayStr.Split(",");
-            for (int i = 0;i < weekDays.Length; i++)
-            {
-                if (weekDayStr.Contains(weekDays[i].GetDisplayShortName().ToLower()))
-                    result |= weekDays[i];
-            }
-            return result;
-        }
-        private enum Stage
-        {
-            Name,
-            TimeBeg,
-            TimeEnd,
-            Weekday
-        }
+    }
+    internal enum CreateScheduleTemplateStage
+    {
+        Name,
+        TimeBeg,
+        TimeEnd,
+        Weekday
     }
 }

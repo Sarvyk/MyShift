@@ -22,10 +22,11 @@ namespace MyShift.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task CreateRequestAsync(Request request, CancellationToken ct)
+        public async Task<Request> InsertRequestAsync(Request request, CancellationToken ct)
         {
             await _context.Requests.AddAsync(request, ct);
             await _context.SaveChangesAsync();
+            return request;
         }
 
         public async Task DeleteRequestAsync(int requestId, CancellationToken ct)

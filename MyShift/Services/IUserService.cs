@@ -12,6 +12,7 @@ namespace MyShift.Services
     {
         Task<ToDoUser?> GetUserAsync(int id, CancellationToken ct);
         Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken ct);
-        Task<ToDoUser> RegisterUserAsync(long chatId,User userData, CancellationToken ct);
+        Task<ToDoUser?> RegisterUserAsync(long chatId,User userData, CancellationToken ct);
+        Task<IReadOnlyList<ToDoUser>> GetAllUsers(CancellationToken ct);
     }
 }

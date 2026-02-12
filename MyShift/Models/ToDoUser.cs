@@ -22,7 +22,7 @@ namespace MyShift.Models
         [InverseProperty("AssignedBy")]
         public List<Schedule> Schedules { get; set; } = new(); // Графики пользователя, которые назначал данные пользователь(модератор, админ)
         [InverseProperty("CreatorBy")]
-        public List<Schedule_Template> Schedule_Templates { get; set; } = new();
+        public List<ScheduleTemplate> Schedule_Templates { get; set; } = new();
         public ToDoUser(long chatId,long telegramId, string? userName, string? firstName, string? lastName)
         {
             ChatId = chatId;
@@ -31,7 +31,7 @@ namespace MyShift.Models
             FirstName = firstName;
             LastName = lastName;
             RegisteredAt = DateTime.UtcNow;
-            Role = Role.Moderator;
+            Role = Role.Administrator;
         }
         public ToDoUser() { }
     }

@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MyShift.Abstracts;
 using MyShift.Data;
+using MyShift.Dialogs;
 using MyShift.Enums;
 using MyShift.Helpers;
 using MyShift.Models;
 using MyShift.Repositories;
 using MyShift.Services;
+using Sprache;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace MyShift
     {
         private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        private readonly Dictionary<long, Dialog> _waitMessage = [];
+        private readonly Dictionary<long, IDialog> _waitMessage = [];
         public UpdateHandler()
         {
             var sqlContext = new SqLiteDbContext();
@@ -63,12 +64,22 @@ namespace MyShift
                             }
                             break;
                         case "/создать график":
-
+                            IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplates();
+                            if (templates.Count == 0)
+                            {
+                                await botClient.SendMessage(update.Message.Chat, "Отсутствуют шаблоны графиков!");
+                                return;
+                            }
+                            await botClient.SendMessage(update.Message.Chat, "Для создания графика, необходимо заполнить данные. Выберите кому назначаете график.");
+                            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsers(cancellationToken);
+                            await PrintUserList(botClient, update, users, cancellationToken);
+                            ToDoUser user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken);
+                            await AddNewDialog(update.Message.Chat.Id, new DialogCreateSchedule(botClient, update, templates, users, new ScheduleBuilder(user),_scheduleRequestService));
                             break;
                         case "/создать шаблон":
                             await botClient.SendMessage(update.Message.Chat, "Для создания шаблона необъодимо ввести имя шаблона, время и дни работы. Введите название шаблона.");
-                            int id = (await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken)).Id;
-                            await AddNewDialog(update.Message.Chat.Id, new DialogCreateTemplate(botClient, update, new ScheduleBuilder(_scheduleRequestService, id)));
+                            user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken);
+                            await AddNewDialog(update.Message.Chat.Id, new DialogCreateTemplate(botClient, update,new ScheduleBuilder(user), _scheduleRequestService));
                             break;
                         case string a when a.StartsWith("/добавить заявку"):
                             if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
@@ -110,14 +121,26 @@ namespace MyShift
                 await HandleErrorAsync(botClient, ex, HandleErrorSource.HandleUpdateError, cancellationToken);
             }
         }
-
+        private async Task PrintUserList(ITelegramBotClient botClient, Update update, IReadOnlyList<ToDoUser> users, CancellationToken ct)
+        {
+            StringBuilder sb = new StringBuilder();
+            int i = 0;
+            foreach (ToDoUser user in users)
+            {
+                string nickname = user.UserName != null ? $"{user.UserName};" : "";
+                string firstname = user.FirstName != null ? $"{user.FirstName};" : "";
+                string lastname = user.LastName != null ? $"{user.LastName};" : "";
+                sb.AppendLine($"{i++}){nickname}{firstname}{lastname}");
+            }
+            await botClient.SendMessage(update.Message.Chat, $"{sb.ToString()}", cancellationToken:ct);
+        }
         private void ResetWaitMessage(long chatId)
         {
             if(_waitMessage.ContainsKey(chatId))
                 _waitMessage.Remove(chatId);
         }
 
-        private async Task AddNewDialog(long chatId, Dialog dialog)
+        private async Task AddNewDialog(long chatId, IDialog dialog)
         {
             if(_waitMessage.ContainsKey(chatId))
                 _waitMessage.Remove(chatId);
@@ -156,7 +179,7 @@ namespace MyShift
         private async Task CreateRequest(ITelegramBotClient botClient, Update update, string message, CancellationToken ct)
         {
             ToDoUser? user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
-            await _scheduleRequestService.CreateRequestAsync(user.Id, message, ct);
+            await _scheduleRequestService.InsertRequestAsync(user.Id, message, ct);
             await botClient.SendMessage(update.Message.Chat,"Заявка добавлена", cancellationToken:ct);
         }
         private async Task GetRequests(ITelegramBotClient botClient, Update update, CancellationToken ct)
@@ -201,14 +224,20 @@ namespace MyShift
             if (toDoUser != null)
             {
                 if (toDoUser.Role == Role.Administrator)
-                    await botClient.SendMessage(update.Message.Chat,@"Список команд:заглушка",cancellationToken:ct);
+                    await botClient.SendMessage(update.Message.Chat, @"Список команд:
+/создать шаблон - процесс создания шаблона графиков;
+/создать график - процесс создания графика для пользователя
+/график - показывает текущий график;
+/добавить заявку [описание] - создаёт заявку на смену расписания;
+/заявки - выводит список заявок;
+/удалить заявку [номер] - удаляет заявку по заданному номеру", cancellationToken:ct);
                 else if (toDoUser.Role == Role.Moderator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
-/график - показывает текущий график; 
-/добавить заявку [описание] - создаёт заявку на смену расписания,
-/заявки - выводит список заявок
+/график - показывает текущий график;
+/добавить заявку [описание] - создаёт заявку на смену расписания;
+/заявки - выводит список заявок;
 /удалить заявку [номер] - удаляет заявку по заданному номеру", cancellationToken: ct);
             }
             else
