@@ -112,12 +112,6 @@ namespace MyShift
                         await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("show||0")), cancellationToken: cancellationToken);
                     }
                     break;
-                case string a when a.StartsWith("/удалить заявку"):
-                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
-                    {
-                        await DeleteRequest(botClient, update, a.Replace("/удалить заявку", "").Trim(), cancellationToken);
-                    }
-                    break;
                 case "/график":
                     if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
                     {
@@ -158,7 +152,7 @@ namespace MyShift
                         string answer = $"Сообщение:{request.Message}\r\nСтатус:{request.Status.GetDisplayName()}{(request.Processor == null?"":$"\r\nЗаявку обработал{request.Processor.FirstName}{(request.ResolutionComment == null?"":$"Комментарий к заявке:{request.ResolutionComment}")}")}\r\nДата создания заявки:{request.CreatedAt}";
                             keyboardMarkup.AddNewRow(new InlineKeyboardButton[]
                             {
-                                new InlineKeyboardButton("❌Удалить",ToDoItemCallbackDto.FromString($"deletetask|{request.Id}").ToString())
+                                new InlineKeyboardButton("❌Удалить",ToDoItemCallbackDto.FromString($"deleteRequest|{request.Id}").ToString())
                             });
                         await botClient.SendMessage(update.CallbackQuery.Message.Chat, answer, replyMarkup: keyboardMarkup, cancellationToken: ct);
                         break;
@@ -171,6 +165,12 @@ namespace MyShift
                         callbackData.Add(new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString()));
                     }
                     await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
+                    break;
+                case CallbackQuery a when a.Data.StartsWith("deleteRequest"):
+                    context = new ScenarioContext(ScenarioType.Delete_Request);
+                    context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data).ToString());
+                    await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                    await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
             }
         }
@@ -207,12 +207,6 @@ namespace MyShift
                 sb.AppendLine($"{i++}){nickname}; {lastname} {firstname}");
             }
             await botClient.SendMessage(update.Message.Chat, $"{sb.ToString()}", cancellationToken:ct);
-        }
-        private async Task DeleteRequest(ITelegramBotClient botClient, Update update, string number, CancellationToken ct)
-        {
-            ToDoUser? user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id,ct);
-            await _scheduleRequestService.DeleteRequestAsync(user.Id, number, ct);
-            await botClient.SendMessage(update.Message.Chat, $"Запись №{number} удалена!",cancellationToken:ct);
         }
 
         private async Task StartCommand(ITelegramBotClient botClient,Update update, CancellationToken ct)

@@ -57,12 +57,9 @@ namespace MyShift.Core.Services
             await _scheduleRepository.InsertTemplateAsync(schTemplate, ct);
         }
 
-        public async Task DeleteRequestAsync(int userId, string numberRequest, CancellationToken ct)
+        public async Task DeleteRequestAsync(int requestId, CancellationToken ct)
         {
-            if(await _requestRepository.GetRequestAsync(userId, ValidateInt(numberRequest),ct) != null)
-            {
-                await _requestRepository.DeleteRequestAsync(ValidateInt(numberRequest),ct);
-            }
+            await _requestRepository.DeleteRequestAsync(requestId,ct);
         }
 
         public async Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct)

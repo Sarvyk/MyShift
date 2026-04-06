@@ -16,50 +16,36 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MyShift.Core.Scenarios
 {
-    internal class Requests : IScenario
+    internal class Delete_Request : IScenario
     {
-        private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        public Requests(IUserService userService, IScheduleRequestService scheduleRequestService)
+        public Delete_Request(IScheduleRequestService scheduleRequestService)
         {
-            _userService = userService;
             _scheduleRequestService = scheduleRequestService;
         }
-        public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Requests;
+        public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Delete_Request;
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             switch(context.CurrentStep)
             {
                 case null:
-                    context.CurrentStep = "Reason";
-                    ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(message.From.Id, ct)).Id, ct);
-                    context.Data.Add("User", user);
-                    IReadOnlyList<Request> requests = await _scheduleRequestService.GetRequestsAsync(user.Id, ct);
-                    List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
-                    foreach (Request request in requests)
+                    int requestId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
+                    context.Data.Add("RequestId", requestId);
+                    await botClient.SendMessage(message.Chat, $"Подтверждение удаления заявки", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("✅Да", "yes"), new InlineKeyboardButton("❌Нет", "no")), cancellationToken: ct);
+                    context.CurrentStep = "Approve";
+                    return ScenarioResult.Transition;
+                case "Approve":
+                    if (context.Data["Callback"].ToString() == "no")
                     {
-                        callbackData.Add(new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyyy года"), ToDoItemCallbackDto.FromString($"showtask|{request.Id}").ToString()));
-                    }
-                    if(callbackData.Count == 0)
-                    {
-                        await botClient.SendMessage(message.Chat, "Вы ещё не подавали заявки", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, $"Удаление отменено", cancellationToken: ct);
                         return ScenarioResult.Completed;
                     }
-                    await botClient.SendMessage(message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("show||0")), cancellationToken: ct);
-                    context.CurrentStep = "show";
-                    return ScenarioResult.Transition;
-                case "":
+                    await _scheduleRequestService.DeleteRequestAsync(Int32.Parse(context.Data["RequestId"].ToString()), ct);
                     break;
             }
+            await botClient.SendMessage(message.Chat, $"Заявка удалена", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
     }
 }
-//List<InlineKeyboardButton[]> listButtons = new List<InlineKeyboardButton[]>();
-//foreach (ToDoList list in userLists)
-//{
-//    listButtons.Add(new[] { new InlineKeyboardButton() { Text = list.Name, CallbackData = ToDoListCallbackDto.FromString($"deletelist|{list.Id}").ToString() } });
-//}
-//context.Data.Add("Callback", "");//Для переноса ответа.
-//await botClient.SendMessage(message.Chat, "Выберете список для удаления:", replyMarkup: new InlineKeyboardMarkup(listButtons), cancellationToken: ct);

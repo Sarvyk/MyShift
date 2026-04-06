@@ -10,6 +10,6 @@ namespace MyShift.Core.Scenarios.Enums
     {
         None,
         Add_request,
-        Requests
+        Delete_Request
     }
 }
