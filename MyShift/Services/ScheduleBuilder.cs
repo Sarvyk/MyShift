@@ -15,12 +15,14 @@ namespace MyShift.Services
 {
     internal class ScheduleBuilder : IScheduleBuilder
     {
-        private ScheduleTemplate _template;//не знаю, стоит ли это разделять. Чисто технически, этот класс работает создаёт шаблоны графиков и сами графики. Поидее смысла особого нет в разделении
-        private  Schedule _schedule;
+        private readonly ScheduleTemplate _template;//не знаю, стоит ли это разделять. Чисто технически, этот класс работает создаёт шаблоны графиков и сами графики. Поидее смысла особого нет в разделении
+        private readonly Schedule _schedule;
+        private readonly List<CycleShift> _cycleList;
         public ScheduleBuilder(ToDoUser creator)
         {
             _template = new ScheduleTemplate(creator);
             _schedule = new Schedule(creator);
+            _cycleList = new List<CycleShift>();
         }
         public void AddNameTemplate(string name) => _template.Name = name;
         public void AddStartTimeTemplate(TimeSpan timeSpan) => _template.StartTime = timeSpan;
