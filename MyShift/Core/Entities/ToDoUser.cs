@@ -31,7 +31,7 @@ namespace MyShift.Core.Models
             FirstName = firstName;
             LastName = lastName;
             RegisteredAt = DateTime.UtcNow;
-            Role = Role.Administrator;
+            Role = Role.User;
         }
         public ToDoUser() { }
     }

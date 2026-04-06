@@ -20,7 +20,7 @@ namespace MyShift.Repositories
         public async Task<ToDoUser> RegisterUserAsync(ToDoUser user, CancellationToken ct)
         {
             await _context.Users.AddAsync(user, ct);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
             return user;
         }
 

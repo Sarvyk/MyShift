@@ -26,12 +26,12 @@ namespace MyShift.Repositories
         public async Task InsertScheduleRangeAsync(List<Schedule> schedules, CancellationToken ct)
         {
             await _context.Schedules.AddRangeAsync(schedules, ct);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
         public async Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct)
         {
             await _context.AddAsync(schTemplate,ct);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
         public async Task InsertSchedule_Template(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct)
@@ -62,7 +62,7 @@ namespace MyShift.Repositories
 
         public async Task<ScheduleTemplate?> GetScheduleTemplateAsync(int id, CancellationToken ct)
         {
-            return _context.Schedule_Templates.FirstOrDefault(tmp => tmp.Id == id);
+            return await _context.Schedule_Templates.FirstOrDefaultAsync(tmp => tmp.Id == id, cancellationToken: ct);
         }
     }
 }

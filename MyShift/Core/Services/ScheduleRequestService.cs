@@ -65,6 +65,11 @@ namespace MyShift.Core.Services
             }
         }
 
+        public async Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct)
+        {
+            return await _requestRepository.GetRequestAsync(userId, requestId, ct);
+        }
+
         public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct)
         {
             return await _requestRepository.GetRequestsAsync(userId,ct);

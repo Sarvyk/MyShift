@@ -26,7 +26,7 @@ namespace MyShift.Repositories
         public async Task<Request> InsertRequestAsync(Request request, CancellationToken ct)
         {
             await _context.Requests.AddAsync(request, ct);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
             return request;
         }
 
@@ -34,7 +34,7 @@ namespace MyShift.Repositories
         {
             Request? request = await _context.Requests.FindAsync(requestId);
             request.Status = RequestStatus.Removed;
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
         public async Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct)
@@ -44,8 +44,7 @@ namespace MyShift.Repositories
 
         public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId , CancellationToken ct)
         {
-            return await _context.Requests.Where(req => req.CreatorId == userId
-            && req.Status != RequestStatus.Removed).ToListAsync();
+            return await _context.Requests.Where(req => req.CreatorId == userId && req.Status != RequestStatus.Removed).OrderByDescending(req => req.CreatedAt) .ToListAsync();
         }
 
         public Task RejectRequestAsync(CancellationToken ct)

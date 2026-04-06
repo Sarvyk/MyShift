@@ -12,7 +12,7 @@ namespace MyShift.Core.Data
     {
         public SqLiteDbContext()
         {
-            Database.EnsureDeleted();
+            //Database.EnsureDeleted();
             Database.EnsureCreated();
         }
         public DbSet<ToDoUser> Users { get; set; }

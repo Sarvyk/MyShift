@@ -1,15 +1,20 @@
 ﻿using MyShift.Core.Data;
-using MyShift.Core.Dialogs;
 using MyShift.Core.Enums;
 using MyShift.Core.Extensions;
+using MyShift.Core.Helpers;
 using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
-using MyShift.Core.Services;
-using MyShift.Repositories;
+using MyShift.Core.Scenarios;
+using MyShift.Core.Scenarios.Enums;
+using MyShift.Core.Scenarios.Interfaces;
+using MyShift.DTO;
+using System.Collections;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MyShift
 {
@@ -17,17 +22,15 @@ namespace MyShift
     {
         private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        private readonly Dictionary<long, IDialog> _waitMessage = [];
-        public UpdateHandler()
+        private readonly IEnumerable _scenarios;
+        private readonly IScenarioContextRepository _scenarioContextRepository;
+        public UpdateHandler(IUserService userService, IScheduleRequestService scheduleRequestService, IEnumerable scenarios, IScenarioContextRepository scenarioContextRepository)
         {
             var sqlContext = new SqLiteDbContext();
-            var userRepository = new UserRepository(sqlContext);
-            var userService = new UserService(userRepository);
-            var requestRepository = new RequestRepository(sqlContext);
-            var scheduleRepository = new ScheduleRepository(sqlContext);
-            var scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
             _userService = userService;
             _scheduleRequestService = scheduleRequestService;
+            _scenarios = scenarios;
+            _scenarioContextRepository = scenarioContextRepository;
         }
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {//добавил пока что обычный вывод, пока не знаю что ещё тут можно сделать.
@@ -38,71 +41,17 @@ namespace MyShift
         {
             try
             {
-                if (update.Message.Text.StartsWith('/'))
+                switch (update.Type)
                 {
-                    ResetWaitMessage(update.Message.Chat.Id);//если у нас есть ожидание диалога, то при попадании в эту секцию кода мы удаляем это ожидание т.к. ввелась команда.
-                    switch (update.Message.Text)
-                    {
-                        case "/start":
-                            await StartCommand(botClient, update, cancellationToken);
-                            await HelpCommand(botClient, update, cancellationToken);
-                            break;
-                        case "/help":
-                            await HelpCommand(botClient, update, cancellationToken);
-                            break;
-                        case "/график":
-                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
-                            {
-
-                            }
-                            break;
-                        case "/создать график":
-                            IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplates();
-                            if (templates.Count == 0)
-                            {
-                                await botClient.SendMessage(update.Message.Chat, "Отсутствуют шаблоны графиков!");
-                                return;
-                            }
-                            await botClient.SendMessage(update.Message.Chat, "Для создания графика, необходимо заполнить данные. Выберите кому назначаете график.");
-                            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsers(cancellationToken);
-                            await PrintUserList(botClient, update, users, cancellationToken);
-                            ToDoUser user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken);
-                            await AddNewDialog(update.Message.Chat.Id, new DialogCreateSchedule(botClient, update, templates, users, new ScheduleBuilder(user),_scheduleRequestService));
-                            break;
-                        case "/создать шаблон":
-                            await botClient.SendMessage(update.Message.Chat, "Для создания шаблона необъодимо ввести имя шаблона, время и дни работы. Введите название шаблона.");
-                            user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken);
-                            await AddNewDialog(update.Message.Chat.Id, new DialogCreateTemplate(botClient, update,new ScheduleBuilder(user), _scheduleRequestService));
-                            break;
-                        case string a when a.StartsWith("/добавить заявку"):
-                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
-                            {
-                                await CreateRequest(botClient, update, a.Replace("/добавить заявку", "").Trim(), cancellationToken);
-                            }
-                            break;
-                        case "/заявки":
-                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
-                            {
-                                await GetRequests(botClient, update, cancellationToken);
-                            }
-                            break;
-                        case string a when a.StartsWith("/удалить заявку"):
-                            if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
-                            {
-                                await DeleteRequest(botClient, update, a.Replace("/удалить заявку", "").Trim(), cancellationToken);
-                            }
-                            break;
-                        default:
-                            await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: cancellationToken);
-                            await HelpCommand(botClient, update, cancellationToken);
-                            break;
-                    }
-                }
-                else if(_waitMessage.ContainsKey(update.Message.Chat.Id))
-                {
-                    bool result = await _waitMessage[update.Message.Chat.Id].NextStep(update.Message.Text, cancellationToken);
-                    if(result)
-                        _waitMessage.Remove(update.Message.Chat.Id);
+                    case UpdateType.CallbackQuery:
+                        await HandleCallBack(botClient, update, cancellationToken);
+                        break;
+                    case UpdateType.Message:
+                        await HandleMessage(botClient, update, cancellationToken);
+                        break;
+                    default:
+                        //await botClient.SendMessage(update.Message.Chat, "Такой формат пока не поддерживается!", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(), cancellationToken: ct);
+                        return;
                 }
             }
             catch (IndexOutOfRangeException ex)
@@ -118,6 +67,134 @@ namespace MyShift
                 await HandleErrorAsync(botClient, ex, HandleErrorSource.HandleUpdateError, cancellationToken);
             }
         }
+
+        private async Task HandleMessage(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        {
+            ScenarioContext? context;
+            context = await _scenarioContextRepository.GetContext(update.Message.From.Id, cancellationToken);
+            if (context != null)
+            {
+                await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                return;
+            }
+            switch (update.Message.Text)
+            {
+                case "/start":
+                    await StartCommand(botClient, update, cancellationToken);
+                    await HelpCommand(botClient, update, cancellationToken);
+                    break;
+                case "/help":
+                    await HelpCommand(botClient, update, cancellationToken);
+                    break;
+                case string a when a.StartsWith("/add_request"):
+                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                    {
+                        context = new ScenarioContext(ScenarioType.Add_request);
+                        await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
+                        await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                    }
+                    break;
+                case "/requests":
+                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                    {
+                        ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken)).Id, cancellationToken);
+                        IReadOnlyList<Request> requests = await _scheduleRequestService.GetRequestsAsync(user.Id, cancellationToken);
+                        List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
+                        foreach (Request request in requests)
+                        {
+                            callbackData.Add(new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString()));
+                        }
+                        if (callbackData.Count == 0)
+                        {
+                            await botClient.SendMessage(update.Message.Chat, "Вы ещё не подавали заявки", cancellationToken: cancellationToken);
+                            break;
+                        }
+                        await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("show||0")), cancellationToken: cancellationToken);
+                    }
+                    break;
+                case string a when a.StartsWith("/удалить заявку"):
+                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                    {
+                        await DeleteRequest(botClient, update, a.Replace("/удалить заявку", "").Trim(), cancellationToken);
+                    }
+                    break;
+                case "/график":
+                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                    {
+
+                    }
+                    break;
+                case "/создать график":
+                    break;
+                case "/создать шаблон":
+                    break;
+                default:
+                    await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: cancellationToken);
+                    await HelpCommand(botClient, update, cancellationToken);
+                    break;
+            }
+        }
+
+        private async Task HandleCallBack(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        {
+            ScenarioContext? context = await _scenarioContextRepository.GetContext(update.CallbackQuery.From.Id, ct);
+            if (context != null)
+            {
+                context.Data["Callback"] = update.CallbackQuery.Data;
+                await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
+                return;
+            }
+            switch (update.CallbackQuery)
+            {
+                case CallbackQuery a when a.Data.StartsWith("show"):
+                    //context = new ScenarioContext(ScenarioType.Add_request);
+                    //await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                    //await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
+                    ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
+                    if(a.Data.StartsWith("showRequest"))
+                    {
+                        Request request = await _scheduleRequestService.GetRequestAsync(user.Id, ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
+                        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+                        string answer = $"Сообщение:{request.Message}\r\nСтатус:{request.Status.GetDisplayName()}{(request.Processor == null?"":$"\r\nЗаявку обработал{request.Processor.FirstName}{(request.ResolutionComment == null?"":$"Комментарий к заявке:{request.ResolutionComment}")}")}\r\nДата создания заявки:{request.CreatedAt}";
+                            keyboardMarkup.AddNewRow(new InlineKeyboardButton[]
+                            {
+                                new InlineKeyboardButton("❌Удалить",ToDoItemCallbackDto.FromString($"deletetask|{request.Id}").ToString())
+                            });
+                        await botClient.SendMessage(update.CallbackQuery.Message.Chat, answer, replyMarkup: keyboardMarkup, cancellationToken: ct);
+                        break;
+                    }
+                    PagedListCallbackDto dto = PagedListCallbackDto.FromString(a.Data);
+                    IReadOnlyList<Request> requests = await _scheduleRequestService.GetRequestsAsync(user.Id, ct);
+                    List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
+                    foreach (Request request in requests)
+                    {
+                        callbackData.Add(new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString()));
+                    }
+                    await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
+                    break;
+            }
+        }
+
+        private async Task ProcessScenario(ITelegramBotClient botClient, ScenarioContext context, User user, Message msg, CancellationToken ct)
+        {
+            IScenario scenario = GetScenario(context.CurrentScenario);
+            if (await scenario.HandleMessageAsync(botClient, context, msg, ct) == ScenarioResult.Completed)
+                await _scenarioContextRepository.ResetContext(user.Id, ct);
+        }
+
+        private IScenario GetScenario(ScenarioType scenarioType)
+        {
+            foreach (IScenario scenario in _scenarios)
+            {
+                if (scenario.CanHandle(scenarioType))
+                {
+                    return scenario;
+                }
+            }
+            throw new ArgumentException("Сценарий не найден");
+        }
+
+
         private async Task PrintUserList(ITelegramBotClient botClient, Update update, IReadOnlyList<ToDoUser> users, CancellationToken ct)
         {
             StringBuilder sb = new StringBuilder();
@@ -130,19 +207,6 @@ namespace MyShift
                 sb.AppendLine($"{i++}){nickname}; {lastname} {firstname}");
             }
             await botClient.SendMessage(update.Message.Chat, $"{sb.ToString()}", cancellationToken:ct);
-        }
-        private void ResetWaitMessage(long chatId)
-        {
-            if(_waitMessage.ContainsKey(chatId))
-                _waitMessage.Remove(chatId);
-        }
-
-        private async Task AddNewDialog(long chatId, IDialog dialog)
-        {
-            if(_waitMessage.ContainsKey(chatId))
-                _waitMessage.Remove(chatId);
-            else
-                _waitMessage.Add(chatId, dialog);
         }
         private async Task DeleteRequest(ITelegramBotClient botClient, Update update, string number, CancellationToken ct)
         {
@@ -163,38 +227,6 @@ namespace MyShift
                 toDoUser = await _userService.RegisterUserAsync(update.Message.Chat.Id, update.Message.From, ct);
                 await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот \"Мой график\"!", cancellationToken: ct);
             }
-        }
-        private void CreateTemplateSchedule()
-        {
-
-        }
-        private string GetSchedule(ToDoUser toDoUser)
-        {
-            
-            return "";
-        }
-        private async Task CreateRequest(ITelegramBotClient botClient, Update update, string message, CancellationToken ct)
-        {
-            ToDoUser? user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
-            await _scheduleRequestService.InsertRequestAsync(user.Id, message, ct);
-            await botClient.SendMessage(update.Message.Chat,"Заявка добавлена", cancellationToken:ct);
-        }
-        private async Task GetRequests(ITelegramBotClient botClient, Update update, CancellationToken ct)
-        {
-            ToDoUser? user = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
-            StringBuilder Answer = new();
-            var queryResult = await _scheduleRequestService.GetRequestsAsync(user.Id, ct);
-            if (queryResult.Count > 0)
-            {
-                Answer.AppendLine($"{user.FirstName}, вот список ваших заявок:");
-                foreach (Request req in await _scheduleRequestService.GetRequestsAsync(user.Id,ct))
-                {
-                    Answer.AppendLine($"{req.Id}) Сообщение:{req.Message}; Статус:{req.Status.GetDisplayName()}");
-                }
-                await botClient.SendMessage(update.Message.Chat,Answer.ToString(),cancellationToken:ct);
-            }
-            else
-                await botClient.SendMessage(update.Message.Chat, $"{user.FirstName}, у вас нет заявок!", cancellationToken:ct);
         }
         private async Task<bool> CheckCredentials(User user, Role roles, CancellationToken ct)
         {
@@ -225,16 +257,16 @@ namespace MyShift
 /создать шаблон - процесс создания шаблона графиков;
 /создать график - процесс создания графика для пользователя
 /график - показывает текущий график;
-/добавить заявку [описание] - создаёт заявку на смену расписания;
-/заявки - выводит список заявок;
+/add_request - создаёт заявку на смену расписания;
+/requests - выводит список заявок;
 /удалить заявку [номер] - удаляет заявку по заданному номеру", cancellationToken:ct);
                 else if (toDoUser.Role == Role.Moderator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
 /график - показывает текущий график;
-/добавить заявку [описание] - создаёт заявку на смену расписания;
-/заявки - выводит список заявок;
+/add_request - создаёт заявку на смену расписания;
+/requests - выводит список заявок;
 /удалить заявку [номер] - удаляет заявку по заданному номеру", cancellationToken: ct);
             }
             else
