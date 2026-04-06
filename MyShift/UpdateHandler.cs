@@ -1,22 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MyShift.Data;
-using MyShift.Dialogs;
-using MyShift.Enums;
-using MyShift.Helpers;
-using MyShift.Models;
+﻿using MyShift.Core.Data;
+using MyShift.Core.Dialogs;
+using MyShift.Core.Enums;
+using MyShift.Core.Extensions;
+using MyShift.Core.Interfaces;
+using MyShift.Core.Models;
+using MyShift.Core.Services;
 using MyShift.Repositories;
-using MyShift.Services;
-using Sprache;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
 using System.Text;
-using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace MyShift
 {

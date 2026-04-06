@@ -1,9 +1,4 @@
 ﻿using DotNetEnv;
-using MyShift.Data;
-using MyShift.Enums;
-using MyShift.Helpers;
-using MyShift.Repositories;
-using MyShift.Services;
 using Telegram.Bot;
 
 namespace MyShift

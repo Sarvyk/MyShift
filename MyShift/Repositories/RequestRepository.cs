@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MyShift.Data;
-using MyShift.Enums;
-using MyShift.Models;
+using MyShift.Core.Data;
+using MyShift.Core.Enums;
+using MyShift.Core.Interfaces;
+using MyShift.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
