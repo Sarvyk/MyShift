@@ -15,12 +15,12 @@ namespace MyShift.Core.Models
         public ScheduleTemplate Schedule_Template { get; set; }
         public int FirstScheduleId { get; set; }
         [ForeignKey("FirstScheduleId")]
-        public Schedule FirstSchedule{ get; set; }
+        public UserSchedule FirstSchedule{ get; set; }
         //поле отмены продления графика
         public bool Is_Cancelled { get; set; } = false;
         public ScheduleTemplate_Schedule()
         {}
-        public ScheduleTemplate_Schedule(ScheduleTemplate scheduleTemplateId, Schedule firstScheduleId)
+        public ScheduleTemplate_Schedule(ScheduleTemplate scheduleTemplateId, UserSchedule firstScheduleId)
         {
             Schedule_Template = scheduleTemplateId;
             FirstSchedule = firstScheduleId;

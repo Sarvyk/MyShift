@@ -12,13 +12,10 @@ namespace MyShift.Core.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public int Type { get; set; }//тут будет храниться тип графика. Фиксированный или циклический.
-        public TimeSpan? StartTime {  get; set; }
-        public TimeSpan? EndTime { get; set; }
-        public string? DaysOfWeekBits { get; set; }
         public int CreatorId { get; set; }
         [ForeignKey("CreatorId")]
         public ToDoUser CreatorBy {  get; set; }
-        public List<CycleShift> CycleShift { get; set; } = new();//Все графики конкретно этого пользователя
+        public string RulesJson { get; set; }
         public ScheduleTemplate() { }
         public ScheduleTemplate(ToDoUser creator)
         {  

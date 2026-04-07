@@ -26,27 +26,9 @@ namespace MyShift.Core.Services
             Request request = new Request(userId, message);
             await _requestRepository.InsertRequestAsync(request,ct);
         }
-        public async Task InsertScheduleAsync(Schedule schedule, ScheduleTemplate template, CancellationToken ct)
-        {//добавляем сразу массивом, чтобы сделать сразу график на некоторый срок.
-            await _scheduleRepository.InsertScheduleAsync(schedule, ct);
-            await _scheduleRepository.InsertSchedule_Template(new ScheduleTemplate_Schedule(template, schedule), ct);
-            List<Schedule> schedules = new List<Schedule>();
-            HashSet<string> Weeks = EnumBitConverter.GetEnumFromBitToMass(template.DaysOfWeekBits);
-            DateTime date = DateTime.Now.AddDays(1);
-            int month = 6;
-            for (int i = 0; i < month; i++)
-            {
-                for (int j = 0; j < 7; j++)
-                {
-                    string daywek = date.ToString("ddd", new CultureInfo("ru-RU"));
-                    if (Weeks.Contains(daywek))
-                    {
-                        schedules.Add(schedule.Clone(date));
-                    }
-                    date = date.AddDays(1);
-                }
-            }
-            await _scheduleRepository.InsertScheduleRangeAsync(schedules, ct);
+        public async Task InsertScheduleAsync(UserSchedule schedule, ScheduleTemplate template, CancellationToken ct)
+        {
+            
         }
         public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates()
         {

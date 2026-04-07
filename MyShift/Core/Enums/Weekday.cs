@@ -7,23 +7,22 @@ using System.Threading.Tasks;
 
 namespace MyShift.Core.Enums
 {
-    [Flags]
     public enum Weekday
     {
         none = 0,
         [Display(Name = "Понедельник", ShortName = "Пн")]
-        Mondey = 1 << 0,
+        Mondey = 1,
         [Display(Name = "Вторник", ShortName = "Вт")]
-        Tuesday = 1 << 1,
+        Tuesday = 2,
         [Display(Name = "Среда", ShortName = "Ср")]
-        Wednesday = 1 << 2,
+        Wednesday = 3,
         [Display(Name = "Четверг", ShortName = "Чт")]
-        Thursday = 1 << 3,
+        Thursday = 4,
         [Display(Name = "Пятница", ShortName = "Пт")]
-        Friday = 1 << 4,
+        Friday = 5,
         [Display(Name = "Суббота", ShortName = "Сб")]
-        Saturday = 1 << 5,
+        Saturday = 6,
         [Display(Name = "Воскресенье", ShortName = "Вс")]
-        Sunday = 1 << 6
+        Sunday = 7
     }
 }

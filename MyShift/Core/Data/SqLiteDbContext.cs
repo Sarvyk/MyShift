@@ -12,12 +12,12 @@ namespace MyShift.Core.Data
     {
         public SqLiteDbContext()
         {
-            //Database.EnsureDeleted();
+            Database.EnsureDeleted();
             Database.EnsureCreated();
         }
         public DbSet<ToDoUser> Users { get; set; }
         public DbSet<Request> Requests { get; set; }
-        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<UserSchedule> Schedules { get; set; }
         public DbSet<ScheduleTemplate> Schedule_Templates { get; set; }
         public DbSet<ScheduleTemplate_Schedule> ToDoUser_ScheduleTemplates { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlite($"Data Source=./mydb.db");

@@ -120,7 +120,7 @@ namespace MyShift
                     break;
                 case "/создать график":
                     break;
-                case "/создать шаблон":
+                case "/create_template":
                     context = new ScenarioContext(ScenarioType.Add_Template);
                     await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
                     await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
@@ -251,7 +251,7 @@ namespace MyShift
             {
                 if (toDoUser.Role == Role.Administrator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
-/создать шаблон - процесс создания шаблона графиков;
+/create_template - процесс создания шаблона графиков;
 /создать график - процесс создания графика для пользователя
 /график - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
