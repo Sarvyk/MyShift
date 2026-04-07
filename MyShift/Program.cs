@@ -22,8 +22,9 @@ namespace MyShift
             ScheduleRequestService scheduleRequestService = new ScheduleRequestService(new RequestRepository(dbContext), new ScheduleRepository(dbContext));
             var scenarios = new List<IScenario>()
             {
-                new Add_request(userService, scheduleRequestService),
-                new Delete_Request(scheduleRequestService)
+                new Add_Request(userService, scheduleRequestService),
+                new Delete_Request(scheduleRequestService),
+                new Add_Template(scheduleRequestService)
             };
             var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, new InMemoryScenarioContextRepository());
             botClient.StartReceiving(handle);

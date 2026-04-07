@@ -10,9 +10,9 @@ namespace MyShift.Core.Models
     public class CycleShift
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        //public string Name { get; set; }
         public int TemplateId { get; set; }
-        [ForeignKey("TemplateId")]
+        [ForeignKey("TemplateId")]//ссылка на шаблон
         public ScheduleTemplate Template { get; set; }
         public int Position { get; set; }
         public int Type { get; set; }//день, ночь или выходной

@@ -12,16 +12,16 @@ using Telegram.Bot.Types;
 
 namespace MyShift.Core.Scenarios
 {
-    internal class Add_request : IScenario
+    internal class Add_Request : IScenario
     {
         private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        public Add_request(IUserService userService, IScheduleRequestService scheduleRequestService)
+        public Add_Request(IUserService userService, IScheduleRequestService scheduleRequestService)
         {
             _userService = userService;
             _scheduleRequestService = scheduleRequestService;
         }
-        public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Add_request;
+        public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Add_Request;
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {

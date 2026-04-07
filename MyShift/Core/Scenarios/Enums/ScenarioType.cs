@@ -9,7 +9,8 @@ namespace MyShift.Core.Scenarios.Enums
     internal enum ScenarioType
     {
         None,
-        Add_request,
-        Delete_Request
+        Add_Request,
+        Delete_Request,
+        Add_Template
     }
 }

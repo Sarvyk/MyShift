@@ -89,7 +89,7 @@ namespace MyShift
                 case string a when a.StartsWith("/add_request"):
                     if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
                     {
-                        context = new ScenarioContext(ScenarioType.Add_request);
+                        context = new ScenarioContext(ScenarioType.Add_Request);
                         await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
                         await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
                     }
@@ -121,6 +121,9 @@ namespace MyShift
                 case "/создать график":
                     break;
                 case "/создать шаблон":
+                    context = new ScenarioContext(ScenarioType.Add_Template);
+                    await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
+                    await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
                     break;
                 default:
                     await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: cancellationToken);
@@ -252,16 +255,14 @@ namespace MyShift
 /создать график - процесс создания графика для пользователя
 /график - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
-/requests - выводит список заявок;
-/удалить заявку [номер] - удаляет заявку по заданному номеру", cancellationToken:ct);
+/requests - выводит список заявок;", cancellationToken:ct);
                 else if (toDoUser.Role == Role.Moderator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
 /график - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
-/requests - выводит список заявок;
-/удалить заявку [номер] - удаляет заявку по заданному номеру", cancellationToken: ct);
+/requests - выводит список заявок;", cancellationToken: ct);
             }
             else
                 await botClient.SendMessage(update.Message.Chat, @"Вот список доступных комманд:/start, /help", cancellationToken: ct);
