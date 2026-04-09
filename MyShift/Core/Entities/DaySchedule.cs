@@ -8,6 +8,7 @@ namespace MyShift.Core.Entities
 {
     internal class DaySchedule
     {
+        public string Days { get; set; }//Дни недели
         public string Type { get; set; }//день, ночь
         public TimeSpan Start { get; set; }
         public TimeSpan End { get; set; }

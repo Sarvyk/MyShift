@@ -41,20 +41,23 @@ namespace MyShift.Core.Scenarios
                 case "SelectDayes":
                     if (context.Data["Callback"].ToString() == "0")
                     {//в таком варианте будет создаваться шаблон линейного графика
-                        context.Data["typeTemplate"] = 0;
+                        context.Data["typeTemplate"] = context.Data["Callback"].ToString();
                         await botClient.SendMessage(message.Chat, "Введите список дней в цифрах, где Пн -> 1, Вт -> 2...Вс ->7. Пример ввода: 1,3,5,7", cancellationToken: ct);
                         context.CurrentStep = "SelectDayPart";
                         return ScenarioResult.Transition;
                     }
                     else
-                    {
+                    {//тут шаблон циклический
+                        context.Data["typeTemplate"] = context.Data["Callback"].ToString();
+                        await botClient.SendMessage(message.Chat, "", cancellationToken: ct);
+                        context.CurrentStep = "";
                         return ScenarioResult.Transition;
                     }
                 case "SelectDayPart":
                     if (context.Data["typeTemplate"].ToString() == "0")
                     {
-                        Validate(0, message.Text);
-                        context.Data["days"] = message.Text;
+                        TextIsValidate(0, message.Text);
+                        context.Data["days"] = string.Join(',', message.Text.Split(',').Select(Int32.Parse).OrderBy(n => n));
                         await botClient.SendMessage(message.Chat, "День, ночь или выходной?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("День", "Day"), new InlineKeyboardButton("Ночь", "Night")), cancellationToken: ct);
                         context.CurrentStep = "SelectedStartTime";
                         return ScenarioResult.Transition;
@@ -76,7 +79,7 @@ namespace MyShift.Core.Scenarios
                 case "SelectedEndTime":
                     if (context.Data["typeTemplate"].ToString() == "0")
                     {
-                        Validate(1, message.Text.Trim());
+                        TextIsValidate(1, message.Text.Trim());
                         context.Data["start"] = message.Text;
                         await botClient.SendMessage(message.Chat, "Введите время окончания смены в формате '05:25'", cancellationToken: ct);
                         context.CurrentStep = "CreateTemplate";
@@ -87,7 +90,7 @@ namespace MyShift.Core.Scenarios
                 case "CreateTemplate":
                     if (context.Data["typeTemplate"].ToString() == "0")
                     {
-                        Validate(1, message.Text);
+                        TextIsValidate(1, message.Text);
                         context.Data["end"] = message.Text;
                         break;
                     }
@@ -99,6 +102,7 @@ namespace MyShift.Core.Scenarios
             {
                 DaySchedule daySchedule = new DaySchedule()
                 {
+                    Days = context.Data["days"].ToString(),
                     Type = context.Data["type"].ToString(),
                     Start = TimeSpan.Parse(context.Data["start"].ToString()),
                     End = TimeSpan.Parse(context.Data["end"].ToString())
@@ -119,7 +123,7 @@ namespace MyShift.Core.Scenarios
             await botClient.SendMessage(message.Chat, "Шаблон успешно добавлен!", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
-        private void Validate(int check, string text)
+        private void TextIsValidate(int check, string text)
         {
             if(check == 0 && (!Regex.IsMatch(text, @"(^\d{1}$)|(^(\d,)+\d{1}$)") || (text.Contains("8") || text.Contains("9"))))
             {
