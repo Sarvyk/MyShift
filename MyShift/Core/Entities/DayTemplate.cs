@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MyShift.Core.Entities
 {
-    internal class DaySchedule
+    internal class DayTemplate
     {
         public string Days { get; set; }//Дни недели
         public string Type { get; set; }//день, ночь

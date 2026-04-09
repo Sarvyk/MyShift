@@ -122,6 +122,8 @@ namespace MyShift
                     break;
                 case "/create_template":
                     context = new ScenarioContext(ScenarioType.Add_Template);
+                    context.Data["TelegramUserId"] = update.Message.From.Id;
+                    context.Data["ChatId"] = update.Message.Chat.Id;
                     await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
                     await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
                     break;
@@ -138,6 +140,8 @@ namespace MyShift
             if (context != null)
             {
                 context.Data["Callback"] = update.CallbackQuery.Data;
+                context.Data["TelegramUserId"] = update.CallbackQuery.From.Id;
+                context.Data["ChatId"] = update.CallbackQuery.Message.Chat.Id;
                 await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                 return;
             }
