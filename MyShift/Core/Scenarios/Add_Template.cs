@@ -93,7 +93,7 @@ namespace MyShift.Core.Scenarios
                             return ScenarioResult.Transition;
                         case "StartCycl":
                             ((ScheduleTemplate)context.Data["template"]).Name = message.Text;
-                            await botClient.SendMessage(message.Chat, "Создать следующую смену?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Да", "yes"), new InlineKeyboardButton("Нет", "no")), cancellationToken: ct);
+                            await botClient.SendMessage(message.Chat, "Создать первую смену?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Да", "yes"), new InlineKeyboardButton("Нет", "no")), cancellationToken: ct);
                             context.CurrentStep = "SelectDayPart";
                             return ScenarioResult.Transition;
                         case "SelectDayPart":
@@ -138,6 +138,11 @@ namespace MyShift.Core.Scenarios
                 }
             }
             ScheduleTemplate scheduleTemplate = ((ScheduleTemplate)context.Data["template"]);
+            if (!context.Data.ContainsKey("templateJson"))
+            {
+                await botClient.SendMessage(message.Chat, "Шаблон не создан т.к. не добавленно ни одной смены.", cancellationToken: ct);
+                return ScenarioResult.Completed;
+            }
             if (context.Data["typeTemplate"] != null && context.Data["typeTemplate"].ToString() == "0")
             {
                 scheduleTemplate.RulesJson = JsonSerializer.Serialize((DayTemplate)context.Data["templateJson"]);
@@ -157,7 +162,7 @@ namespace MyShift.Core.Scenarios
         }
         private void TextIsValidate(int check, string text)
         {
-            if (check == 0 && (!Regex.IsMatch(text, @"(^\d{1}$)|(^(\d,)+\d{1}$)") || (text.Contains("8") || text.Contains("9"))))
+            if (check == 0 && (!Regex.IsMatch(text, @"(^\d{1}$)|(^(\d,)+\d{1}$)") || (text.Contains("8") || text.Contains("9") || text.Contains("0"))))
             {
                 throw new FormatException("Значение не должно быть пустым и должно быть в формате: 1,3,5,6,7");
             }
