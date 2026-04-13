@@ -58,7 +58,7 @@ namespace MyShift.Core.Scenarios
                         DayTemplate dayTemplate = new DayTemplate();
                         dayTemplate.Days = string.Join(',', message.Text.Split(',').Select(Int32.Parse).OrderBy(n => n));
                         context.Data["templateJson"] = dayTemplate;
-                        await botClient.SendMessage(message.Chat, "День или ночь?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("День", "TypeShift"), new InlineKeyboardButton("Ночь", "Night")), cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "День или ночь?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("День", "Day"), new InlineKeyboardButton("Ночь", "Night")), cancellationToken: ct);
                         context.CurrentStep = "selectedStartTime";
                         return ScenarioResult.Transition;
                     case "selectedStartTime":
@@ -162,13 +162,21 @@ namespace MyShift.Core.Scenarios
         }
         private void TextIsValidate(int check, string text)
         {
-            if (check == 0 && (!Regex.IsMatch(text, @"(^\d{1}$)|(^(\d,)+\d{1}$)") || (text.Contains("8") || text.Contains("9") || text.Contains("0"))))
+            switch (check)
             {
-                throw new FormatException("Значение не должно быть пустым и должно быть в формате: 1,3,5,6,7");
-            }
-            else if (check == 1 && (!Regex.IsMatch(text, @"^([01]\d|2[0-3]):[0-5]\d$")))
-            {
-                throw new FormatException("Время должно быть в формате от 00:00 до 23:59");
+                case 0:
+                    var numbers = text.Split(',');
+                    if ((!Regex.IsMatch(text, @"(^\d{1}$)|(^(\d,)+\d{1}$)") || (text.Contains("8") || text.Contains("9") || text.Contains("0"))) || numbers.Length != numbers.Distinct().Count())
+                    {
+                        throw new FormatException("Значение не должно быть пустым, не должно быть дублей и должно быть в формате: 1,3,5,6,7");
+                    }
+                    break;
+                case 1:
+                    if (!Regex.IsMatch(text, @"^([01]\d|2[0-3]):[0-5]\d$"))
+                    {
+                        throw new FormatException("Время должно быть в формате от 00:00 до 23:59");
+                    }
+                    break;
             }
         }
     }

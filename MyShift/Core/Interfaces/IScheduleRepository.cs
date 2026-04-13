@@ -12,11 +12,11 @@ namespace MyShift.Core.Interfaces
     public interface IScheduleRepository
     {
         Task<UserSchedule?> InsertScheduleAsync(UserSchedule schedule, CancellationToken ct);
-        Task InsertScheduleRangeAsync(List<UserSchedule> schedules, CancellationToken ct);
         Task InsertSchedule_Template(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct);
+        Task InstertShiftsAsync(List<Shift> shifts, CancellationToken ct);
         Task<UserSchedule?> GetSchedule(int scheduleId, CancellationToken ct);
         Task<ScheduleTemplate?> GetScheduleTemplateAsync(int templateId, CancellationToken ct);
-        Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates();
+        Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates(CancellationToken ct);
         Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct);
         Task EditShiftScheduleAsync( CancellationToken ct);
         Task DeleteScheduleAsync( CancellationToken ct);

@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Core.Data;
 using MyShift.Core.Enums;
 using MyShift.Core.Extensions;
 using MyShift.Core.Helpers;
@@ -118,12 +119,18 @@ namespace MyShift
 
                     }
                     break;
-                case "/создать график":
+                case "/create_schedule":
+                    context = new ScenarioContext(ScenarioType.Add_Schedule);
+                    context.Data.Add("TelegramUserId", update.Message.From.Id);
+                    context.Data.Add("ChatId", update.Message.Chat.Id);
+                    context.Data.Add("Callback", string.Empty);
+                    await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
+                    await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
                     break;
                 case "/create_template":
                     context = new ScenarioContext(ScenarioType.Add_Template);
-                    context.Data["TelegramUserId"] = update.Message.From.Id;
-                    context.Data["ChatId"] = update.Message.Chat.Id;
+                    context.Data.Add("TelegramUserId", update.Message.From.Id);
+                    context.Data.Add("ChatId", update.Message.Chat.Id);
                     await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
                     await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
                     break;
@@ -148,9 +155,6 @@ namespace MyShift
             switch (update.CallbackQuery)
             {
                 case CallbackQuery a when a.Data.StartsWith("show"):
-                    //context = new ScenarioContext(ScenarioType.Add_request);
-                    //await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
-                    //await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
                     if(a.Data.StartsWith("showRequest"))
                     {
@@ -256,7 +260,7 @@ namespace MyShift
                 if (toDoUser.Role == Role.Administrator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
 /create_template - процесс создания шаблона графиков;
-/создать график - процесс создания графика для пользователя
+/create_schedule - процесс создания графика для пользователя
 /график - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
 /requests - выводит список заявок;", cancellationToken:ct);

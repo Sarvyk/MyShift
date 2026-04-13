@@ -21,22 +21,23 @@ namespace MyShift.Core.Helpers
             {
                 if (listDto.Page == 0)
                 {//настраиваем кнопки перехода по страницам
-                    keyboardMarkup.AddNewRow(new InlineKeyboardButton("➡️", PagedListCallbackDto.FromString($"show|{listDto.ToDoListId}|{listDto.Page + 1}").ToString()));
+                    keyboardMarkup.AddNewRow(new InlineKeyboardButton("➡️", PagedListCallbackDto.FromString($"{listDto.Action}|{listDto.ToDoListId}|{listDto.Page + 1}").ToString()));
                 }
                 else if (listDto.Page > 0 && listDto.Page < totalPage - 1)
                 {
                     keyboardMarkup.AddNewRow(new InlineKeyboardButton[]
                     {
-                    new InlineKeyboardButton("⬅️",PagedListCallbackDto.FromString($"show|{listDto.ToDoListId}|{listDto.Page - 1}").ToString()),
-                    new InlineKeyboardButton("➡️",PagedListCallbackDto.FromString($"show|{listDto.ToDoListId}|{listDto.Page + 1}").ToString())
+                        new InlineKeyboardButton("⬅️",PagedListCallbackDto.FromString($"{listDto.Action}|{listDto.ToDoListId}|{listDto.Page - 1}").ToString()),
+                        new InlineKeyboardButton("➡️",PagedListCallbackDto.FromString($"{listDto.Action}|{listDto.ToDoListId}|{listDto.Page + 1}").ToString())
                     });
                 }
                 else
                 {
-                    keyboardMarkup.AddNewRow(new InlineKeyboardButton("⬅️", PagedListCallbackDto.FromString($"show|{listDto.ToDoListId}|{listDto.Page - 1}").ToString()));
+                    keyboardMarkup.AddNewRow(new InlineKeyboardButton("⬅️", PagedListCallbackDto.FromString($"{listDto.Action}|{listDto.ToDoListId}|{listDto.Page - 1}").ToString()));
                 }
             }
             return keyboardMarkup;
+
         }
     }
 }

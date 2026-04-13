@@ -1,6 +1,6 @@
 ﻿using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
 using MyShift.Core.Data;
-using MyShift.Core.Interfaces;
 using MyShift.Core.Scenarios;
 using MyShift.Core.Scenarios.Interfaces;
 using MyShift.Core.Services;
@@ -16,19 +16,23 @@ namespace MyShift
         {
             Env.Load();
             _token = Env.GetString("API_TOKEN");
-            var botClient = new TelegramBotClient(_token);
-            SqLiteDbContext dbContext = new SqLiteDbContext();
-            UserService userService = new UserService(new UserRepository(dbContext));
-            ScheduleRequestService scheduleRequestService = new ScheduleRequestService(new RequestRepository(dbContext), new ScheduleRepository(dbContext));
-            var scenarios = new List<IScenario>()
+            using (var db = new SqLiteDbContext())
             {
-                new Add_Request(userService, scheduleRequestService),
-                new Delete_Request(scheduleRequestService),
-                new Add_Template(userService, scheduleRequestService)
-            };
-            var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, new InMemoryScenarioContextRepository());
-            botClient.StartReceiving(handle);
-            await Task.Delay(-1);
+                db.Database.Migrate();
+                var botClient = new TelegramBotClient(_token);
+                UserService userService = new UserService(new UserRepository(db));
+                ScheduleRequestService scheduleRequestService = new ScheduleRequestService(new RequestRepository(db), new ScheduleRepository(db));
+                var scenarios = new List<IScenario>()
+                {
+                    new Add_Request(userService, scheduleRequestService),
+                    new Delete_Request(scheduleRequestService),
+                    new Add_Template(userService, scheduleRequestService),
+                    new Add_Schedule(userService, scheduleRequestService)
+                };
+                var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, new InMemoryScenarioContextRepository());
+                botClient.StartReceiving(handle);
+                await Task.Delay(-1);
+            }
         }
     }
 }
