@@ -19,7 +19,7 @@ namespace MyShift.Repositories
         }
         public async Task<UserSchedule?> InsertScheduleAsync(UserSchedule schedule, CancellationToken ct)
         {
-            await _context.Schedules.AddAsync(schedule, ct);
+            await _context.UserSchedules.AddAsync(schedule, ct);
             await _context.SaveChangesAsync(ct);
             return schedule;
         }
@@ -58,7 +58,7 @@ namespace MyShift.Repositories
 
         public async Task<UserSchedule?> GetScheduleAsync(int id, CancellationToken ct)
         {
-            return await _context.Schedules.FirstOrDefaultAsync(schId => schId.Id == id, cancellationToken: ct);
+            return await _context.UserSchedules.FirstOrDefaultAsync(schId => schId.Id == id, cancellationToken: ct);
         }
 
         public async Task<ScheduleTemplate?> GetScheduleTemplateAsync(int id, CancellationToken ct)
@@ -68,7 +68,7 @@ namespace MyShift.Repositories
 
         public async Task<UserSchedule?> GetActiveScheduleByUser(int userId, CancellationToken ct)
         {
-            return await _context.Schedules.FirstOrDefaultAsync(sch => sch.UserId == userId && sch.IsActive == true);
+            return await _context.UserSchedules.FirstOrDefaultAsync(sch => sch.UserId == userId && sch.IsActive == true);
         }
     }
 }

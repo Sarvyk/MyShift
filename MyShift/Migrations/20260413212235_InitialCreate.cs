@@ -109,7 +109,7 @@ namespace MyShift.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Schedules",
+                name: "UserSchedules",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -166,7 +166,7 @@ namespace MyShift.Migrations
                     table.ForeignKey(
                         name: "FK_ToDoUser_ScheduleTemplates_Schedules_FirstScheduleId",
                         column: x => x.FirstScheduleId,
-                        principalTable: "Schedules",
+                        principalTable: "UserSchedules",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -188,17 +188,17 @@ namespace MyShift.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_Schedules_AssignedById",
-                table: "Schedules",
+                table: "UserSchedules",
                 column: "AssignedById");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Schedules_TemplateId",
-                table: "Schedules",
+                table: "UserSchedules",
                 column: "TemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Schedules_UserId",
-                table: "Schedules",
+                table: "UserSchedules",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -230,7 +230,7 @@ namespace MyShift.Migrations
                 name: "ToDoUser_ScheduleTemplates");
 
             migrationBuilder.DropTable(
-                name: "Schedules");
+                name: "UserSchedules");
 
             migrationBuilder.DropTable(
                 name: "Schedule_Templates");

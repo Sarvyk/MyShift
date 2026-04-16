@@ -17,12 +17,6 @@ namespace MyShift.Core.Models
         public List<Request> CreatedRequests { get; set; } = new(); // Заявки пользователя
         [InverseProperty("Processor")]
         public List<Request> ProcessedRequests { get; set; } = new(); // Обработанные заявки
-        //[InverseProperty("User")]
-        //public List<Schedule> UsersSchedules {get;set;} = new();//Все графики конкретно этого пользователя
-        //[InverseProperty("AssignedBy")]
-        //public List<Schedule> Schedules { get; set; } = new(); // Графики пользователя, которые назначал данные пользователь(модератор, админ)
-        //[InverseProperty("CreatorBy")]
-        //public List<ScheduleTemplate> Schedule_Templates { get; set; } = new();
         public ToDoUser(long chatId,long telegramId, string? userName, string? firstName, string? lastName)
         {
             ChatId = chatId;

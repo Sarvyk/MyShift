@@ -11,8 +11,8 @@ using MyShift.Core.Data;
 namespace MyShift.Migrations
 {
     [DbContext(typeof(SqLiteDbContext))]
-    [Migration("20260416153925_StartAndEndtimeIsNullable")]
-    partial class StartAndEndtimeIsNullable
+    [Migration("20260416165651_UserToUserScheduleSwap")]
+    partial class UserToUserScheduleSwap
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -136,12 +136,12 @@ namespace MyShift.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("UserScheduleId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserScheduleId");
 
                     b.ToTable("Shifts");
                 });
@@ -262,13 +262,13 @@ namespace MyShift.Migrations
 
             modelBuilder.Entity("MyShift.Core.Models.Shift", b =>
                 {
-                    b.HasOne("MyShift.Core.Models.ToDoUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("MyShift.Core.Models.UserSchedule", "UserSchedule")
+                        .WithMany("Shifts")
+                        .HasForeignKey("UserScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("UserSchedule");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.UserSchedule", b =>
@@ -303,6 +303,11 @@ namespace MyShift.Migrations
                     b.Navigation("CreatedRequests");
 
                     b.Navigation("ProcessedRequests");
+                });
+
+            modelBuilder.Entity("MyShift.Core.Models.UserSchedule", b =>
+                {
+                    b.Navigation("Shifts");
                 });
 #pragma warning restore 612, 618
         }

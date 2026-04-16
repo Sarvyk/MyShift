@@ -133,12 +133,12 @@ namespace MyShift.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("UserId")
+                    b.Property<int>("UserScheduleId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserScheduleId");
 
                     b.ToTable("Shifts");
                 });
@@ -207,7 +207,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Schedules");
+                    b.ToTable("UserSchedules");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>
@@ -259,13 +259,13 @@ namespace MyShift.Migrations
 
             modelBuilder.Entity("MyShift.Core.Models.Shift", b =>
                 {
-                    b.HasOne("MyShift.Core.Models.ToDoUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("MyShift.Core.Models.UserSchedule", "UserSchedule")
+                        .WithMany("Shifts")
+                        .HasForeignKey("UserScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("UserSchedule");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.UserSchedule", b =>
@@ -300,6 +300,11 @@ namespace MyShift.Migrations
                     b.Navigation("CreatedRequests");
 
                     b.Navigation("ProcessedRequests");
+                });
+
+            modelBuilder.Entity("MyShift.Core.Models.UserSchedule", b =>
+                {
+                    b.Navigation("Shifts");
                 });
 #pragma warning restore 612, 618
         }

@@ -20,7 +20,7 @@ namespace MyShift.Core.Models
 
         public int TemplateId { get; set; }
         public ScheduleTemplate Template { get; set; }
-
+        public List<Shift> Shifts { get; set; } = new();
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool IsActive { get; set; }

@@ -211,7 +211,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Schedules");
+                    b.ToTable("UserSchedules");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>

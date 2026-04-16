@@ -10,8 +10,8 @@ namespace MyShift.Core.Models
     public class Shift
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
-        public ToDoUser User { get; set; }
+        public int UserScheduleId { get; set; }
+        public UserSchedule UserSchedule { get; set; }
         public DateTime ShiftDate { get; set; } // дата смены
         public TimeSpan? StartTime { get; set; } // время начала (например, 09:00)
         public TimeSpan? EndTime { get; set; }   // время окончания (например, 18:00)
@@ -21,9 +21,9 @@ namespace MyShift.Core.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public Shift() { }
-        public Shift(int userId, DateTime shiftDate, TimeSpan? start, TimeSpan? end, string shiftType, int status)
+        public Shift(int userScheduleId, DateTime shiftDate, TimeSpan? start, TimeSpan? end, string shiftType, int status)
         {
-            UserId = userId;
+            UserScheduleId = userScheduleId;
             ShiftDate = shiftDate;
             StartTime = start;
             EndTime = end;
