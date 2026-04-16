@@ -29,9 +29,8 @@ namespace MyShift.Core.Services
                 DayTemplate dayTemplate = JsonSerializer.Deserialize<DayTemplate>(template.RulesJson);
                 string firstDay = ((Weekday)Int32.Parse(dayTemplate.Days.Split(',')[0])).GetDisplayShortName().ToLower();
                 DateTime firstWorkDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1);
-                var f = firstWorkDay.ToString("ddd");
                 while (firstWorkDay.ToString("ddd") != firstDay)
-                {//делаем расчёт даты начала и даты окончания действия графика
+                {//делаем расчёт даты начала действия графика
                     firstWorkDay = firstWorkDay.AddDays(1);
                 }
                 schedule.StartDate = firstWorkDay;
@@ -60,10 +59,25 @@ namespace MyShift.Core.Services
             }
             else if (template.Type == 1)
             {
-
-            }
-            {
-
+                CycleTemplate cycleTemplate = JsonSerializer.Deserialize<CycleTemplate>(template.RulesJson);
+                schedule.StartDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1);
+                schedule.EndDate = schedule.StartDate.AddMonths(6);
+                DateTime workDay = schedule.StartDate;
+                int i = 0;
+                var shiftList = new List<Shift>();
+                while (workDay <= schedule.EndDate)
+                {
+                    shiftList.Add(new Shift(schedule.UserId, workDay, cycleTemplate[i].Start, cycleTemplate[i].End, cycleTemplate[i].TypeShift, 1));
+                    if (i == cycleTemplate.Count-1)
+                    {
+                        i = 0;
+                    }
+                    else
+                        i++;
+                    workDay = workDay.AddDays(1);
+                }
+                await _scheduleRepository.InsertScheduleAsync(schedule, ct);
+                await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
             }
         }
         public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates(CancellationToken ct)

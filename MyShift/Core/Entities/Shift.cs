@@ -13,15 +13,15 @@ namespace MyShift.Core.Models
         public int UserId { get; set; }
         public ToDoUser User { get; set; }
         public DateTime ShiftDate { get; set; } // дата смены
-        public TimeSpan StartTime { get; set; } // время начала (например, 09:00)
-        public TimeSpan EndTime { get; set; }   // время окончания (например, 18:00)
+        public TimeSpan? StartTime { get; set; } // время начала (например, 09:00)
+        public TimeSpan? EndTime { get; set; }   // время окончания (например, 18:00)
         public string ShiftType { get; set; } // "Day", "Night", "Off"
         public int Status { get; set; } // 0 = активна, 1 = отменена
         public string? CancelReason { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public Shift() { }
-        public Shift(int userId, DateTime shiftDate, TimeSpan start, TimeSpan end, string shiftType, int status)
+        public Shift(int userId, DateTime shiftDate, TimeSpan? start, TimeSpan? end, string shiftType, int status)
         {
             UserId = userId;
             ShiftDate = shiftDate;
