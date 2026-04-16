@@ -31,7 +31,7 @@ namespace MyShift.Core.Scenarios
             {
                 if (!context.Data["Callback"].ToString().Contains("selectedTemplate"))
                 {
-                    IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplates(ct);
+                    IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplatesAsync(ct);
                     if (templates.Count == 0)
                     {
                         await botClient.SendMessage(message.Chat, "Действующие шаблоны не найдены!", cancellationToken: ct);
@@ -81,6 +81,11 @@ namespace MyShift.Core.Scenarios
             }
 
             int userId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
+            if((await _scheduleRequestService.GetActiveScheduleByUser(userId,ct)) != null)
+            {
+                await botClient.SendMessage(context.Data["ChatId"].ToString(), "У этого пользователя уже есть активный график!", cancellationToken: ct);
+                return ScenarioResult.Completed;
+            }
             int assignedById = (await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id;
             ScheduleTemplate readyTemplate = (ScheduleTemplate)context.Data["Template"];
             UserSchedule userSchedule = new UserSchedule(userId, assignedById, readyTemplate.Id);

@@ -21,7 +21,7 @@ namespace MyShift.Repositories
         {
             await _context.Schedules.AddAsync(schedule, ct);
             await _context.SaveChangesAsync(ct);
-            return await GetSchedule(schedule.Id, ct);
+            return schedule;
         }
         public async Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct)
         {
@@ -29,7 +29,7 @@ namespace MyShift.Repositories
             await _context.SaveChangesAsync(ct);
         }
 
-        public async Task InsertSchedule_Template(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct)
+        public async Task InsertSchedule_TemplateAsync(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct)
         {
             await _context.AddAsync(templ_schedule);
             await _context.SaveChangesAsync(ct);
@@ -51,12 +51,12 @@ namespace MyShift.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates(CancellationToken ct)
+        public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct)
         {
             return await _context.Schedule_Templates.ToListAsync();
         }
 
-        public async Task<UserSchedule?> GetSchedule(int id, CancellationToken ct)
+        public async Task<UserSchedule?> GetScheduleAsync(int id, CancellationToken ct)
         {
             return await _context.Schedules.FirstOrDefaultAsync(schId => schId.Id == id, cancellationToken: ct);
         }
@@ -64,6 +64,11 @@ namespace MyShift.Repositories
         public async Task<ScheduleTemplate?> GetScheduleTemplateAsync(int id, CancellationToken ct)
         {
             return await _context.Schedule_Templates.FirstOrDefaultAsync(tmp => tmp.Id == id, cancellationToken: ct);
+        }
+
+        public async Task<UserSchedule?> GetActiveScheduleByUser(int userId, CancellationToken ct)
+        {
+            return await _context.Schedules.FirstOrDefaultAsync(sch => sch.UserId == userId && sch.IsActive == true);
         }
     }
 }

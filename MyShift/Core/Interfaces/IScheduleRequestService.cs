@@ -7,16 +7,17 @@ using System.Threading.Tasks;
 
 namespace MyShift.Core.Interfaces
 {
-    internal interface IScheduleRequestService
+    public interface IScheduleRequestService
     {
         Task InsertRequestAsync(int userId, string message, CancellationToken ct);
         Task InsertScheduleAsync(UserSchedule schedules, ScheduleTemplate template,CancellationToken ct);
         Task InsertScheduleTemplateAsync(ScheduleTemplate sch_template, CancellationToken ct);
         Task<ScheduleTemplate?> GetTemplateAsync(int templateId, CancellationToken ct);
-        Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates(CancellationToken ct);
+        Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct);
         Task DeleteRequestAsync(int requestId, CancellationToken ct);
         Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct);
         Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct);
-        Task GetScheduleAsync(ToDoUser toDoUser,CancellationToken ct);
+        Task<UserSchedule?> GetScheduleAsync(int scheduleId,CancellationToken ct);
+        Task<UserSchedule?> GetActiveScheduleByUser(int userId, CancellationToken ct);
     }
 }

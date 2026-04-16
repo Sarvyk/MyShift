@@ -80,9 +80,9 @@ namespace MyShift.Core.Services
                 await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
             }
         }
-        public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplates(CancellationToken ct)
+        public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct)
         {
-            return await _scheduleRepository.GetAllTemplates(ct);
+            return await _scheduleRepository.GetAllTemplatesAsync(ct);
         }
         public async Task InsertScheduleTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct)
         {
@@ -126,6 +126,16 @@ namespace MyShift.Core.Services
         public async Task<ScheduleTemplate?> GetTemplateAsync(int templateId, CancellationToken ct)
         {
             return await _scheduleRepository.GetScheduleTemplateAsync(templateId, ct);
+        }
+
+        public async Task<UserSchedule?> GetScheduleAsync(int scheduleId, CancellationToken ct)
+        {
+            return await _scheduleRepository.GetScheduleAsync(scheduleId, ct);
+        }
+
+        public async Task<UserSchedule?> GetActiveScheduleByUser(int userId, CancellationToken ct)
+        {
+            return await _scheduleRepository.GetActiveScheduleByUser(userId, ct);
         }
     }
 }
