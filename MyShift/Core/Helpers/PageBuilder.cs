@@ -37,7 +37,7 @@ namespace MyShift.Core.Helpers
                 }
             }
             return keyboardMarkup;
-
         }
+
     }
 }

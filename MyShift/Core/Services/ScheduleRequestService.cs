@@ -133,9 +133,14 @@ namespace MyShift.Core.Services
             return await _scheduleRepository.GetScheduleAsync(scheduleId, ct);
         }
 
-        public async Task<UserSchedule?> GetActiveScheduleByUser(int userId, CancellationToken ct)
+        public async Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct)
         {
-            return await _scheduleRepository.GetActiveScheduleByUser(userId, ct);
+            return await _scheduleRepository.GetActiveScheduleByUserAsync(userId, ct);
+        }
+
+        public async Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct)
+        {
+            return await _scheduleRepository.GetShiftByIdAsync(scheduleId, ct);
         }
     }
 }

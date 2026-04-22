@@ -10,9 +10,11 @@ using MyShift.Core.Scenarios.Enums;
 using MyShift.Core.Scenarios.Interfaces;
 using MyShift.DTO;
 using System.Collections;
+using System.Runtime.InteropServices;
 using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
+using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -103,20 +105,26 @@ namespace MyShift
                         List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
                         foreach (Request request in requests)
                         {
-                            callbackData.Add(new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString()));
+                            callbackData.Add(GetFormatAnswerRequest(request));
                         }
                         if (callbackData.Count == 0)
                         {
                             await botClient.SendMessage(update.Message.Chat, "Вы ещё не подавали заявки", cancellationToken: cancellationToken);
                             break;
                         }
-                        await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("show||0")), cancellationToken: cancellationToken);
+                        await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showRequestPageNext||0")), cancellationToken: cancellationToken);
                     }
                     break;
-                case "/график":
+                case "/schedule":
                     if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
                     {
-
+                        UserSchedule userSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken)).Id, cancellationToken);
+                        var callbackData = new List<KeyValuePair<string, string>>();
+                        foreach (Shift shift in userSchedule.Shifts)
+                        {
+                            callbackData.Add(GetFormatAnswerShift(shift));
+                        }
+                        await botClient.SendMessage(update.Message.Chat, "Выберите смену", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: cancellationToken);
                     }
                     break;
                 case "/create_schedule":
@@ -156,26 +164,57 @@ namespace MyShift
             {
                 case CallbackQuery a when a.Data.StartsWith("show"):
                     ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
-                    if(a.Data.StartsWith("showRequest"))
+                    if (a.Data.StartsWith("showRequest"))
                     {
-                        Request request = await _scheduleRequestService.GetRequestAsync(user.Id, ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
-                        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-                        string answer = $"Сообщение:{request.Message}\r\nСтатус:{request.Status.GetDisplayName()}{(request.Processor == null?"":$"\r\nЗаявку обработал{request.Processor.FirstName}{(request.ResolutionComment == null?"":$"Комментарий к заявке:{request.ResolutionComment}")}")}\r\nДата создания заявки:{request.CreatedAt}";
+                        if (a.Data.StartsWith("showRequest|"))
+                        {
+                            Request request = await _scheduleRequestService.GetRequestAsync(user.Id, ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
+                            InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+                            string answer = $"Сообщение:{request.Message}\r\nСтатус:{request.Status.GetDisplayName()}{(request.Processor == null ? "" : $"\r\nЗаявку обработал{request.Processor.FirstName}{(request.ResolutionComment == null ? "" : $"Комментарий к заявке:{request.ResolutionComment}")}")}\r\nДата создания заявки:{request.CreatedAt}";
                             keyboardMarkup.AddNewRow(new InlineKeyboardButton[]
                             {
                                 new InlineKeyboardButton("❌Удалить",ToDoItemCallbackDto.FromString($"deleteRequest|{request.Id}").ToString())
                             });
-                        await botClient.SendMessage(update.CallbackQuery.Message.Chat, answer, replyMarkup: keyboardMarkup, cancellationToken: ct);
-                        break;
+                            await botClient.SendMessage(update.CallbackQuery.Message.Chat, answer, replyMarkup: keyboardMarkup, cancellationToken: ct);
+                            break;
+                        }
+                        else if (a.Data.StartsWith("showRequestPagePrev") || a.Data.StartsWith("showRequestPageNext"))
+                        {
+                            PagedListCallbackDto dto = PagedListCallbackDto.FromString(a.Data);
+                            IReadOnlyList<Request> requests = await _scheduleRequestService.GetRequestsAsync(user.Id, ct);
+                            List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
+                            foreach (Request request in requests)
+                            {
+                                callbackData.Add(GetFormatAnswerRequest(request));
+                            }
+                            await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
+                        }
                     }
-                    PagedListCallbackDto dto = PagedListCallbackDto.FromString(a.Data);
-                    IReadOnlyList<Request> requests = await _scheduleRequestService.GetRequestsAsync(user.Id, ct);
-                    List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
-                    foreach (Request request in requests)
+                    else if (a.Data.StartsWith("showShift"))
                     {
-                        callbackData.Add(new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString()));
+                        if(a.Data.StartsWith("showShift|"))
+                        {
+                            Shift shift = await _scheduleRequestService.GetShiftByIdAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
+                            if (shift.ShiftType == ShiftType.off)
+                            {
+                                await botClient.SendMessage(update.CallbackQuery.Message.Chat, $"На {shift.ShiftDate.ToString("d")} назначен выходной день.", cancellationToken: ct);
+                                return;
+                            }
+                            string answer = $"{shift.ShiftType.GetDisplayName()} на {shift.ShiftDate.ToString("D")}\r\nВремя с {shift.StartTime.Value.ToString(@"hh\:mm")} до {shift.EndTime.Value.ToString(@"hh\:mm")}{(shift.Status == 1?"": "\r\nСтатус:отменена")}";
+                            await botClient.SendMessage(update.CallbackQuery.Message.Chat, answer, cancellationToken: ct);
+                        }
+                        else if(a.Data.StartsWith("showShiftsPagePrev") || a.Data.StartsWith("showShiftsPageNext"))
+                        {
+                            PagedListCallbackDto dto = PagedListCallbackDto.FromString(a.Data);
+                            IReadOnlyList<Shift> shifts = (await _scheduleRequestService.GetActiveScheduleByUserAsync(user.Id, ct)).Shifts.OrderBy(sh => sh.ShiftDate).ToList();
+                            List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
+                            foreach (Shift shift in shifts)
+                            {
+                                callbackData.Add(GetFormatAnswerShift(shift));
+                            }
+                            await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите смену", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
+                        }
                     }
-                    await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
                     break;
                 case CallbackQuery a when a.Data.StartsWith("deleteRequest"):
                     context = new ScenarioContext(ScenarioType.Delete_Request);
@@ -185,7 +224,8 @@ namespace MyShift
                     break;
             }
         }
-
+        private KeyValuePair<string,string> GetFormatAnswerRequest(Request request) => new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString());
+        private KeyValuePair<string, string> GetFormatAnswerShift(Shift shift) => new KeyValuePair<string, string>(shift.ShiftDate.ToString("d"), ToDoItemCallbackDto.FromString($"showShift|{shift.Id}").ToString());
         private async Task ProcessScenario(ITelegramBotClient botClient, ScenarioContext context, User user, Message msg, CancellationToken ct)
         {
             IScenario scenario = GetScenario(context.CurrentScenario);
@@ -203,21 +243,6 @@ namespace MyShift
                 }
             }
             throw new ArgumentException("Сценарий не найден");
-        }
-
-
-        private async Task PrintUserList(ITelegramBotClient botClient, Update update, IReadOnlyList<ToDoUser> users, CancellationToken ct)
-        {
-            StringBuilder sb = new StringBuilder();
-            int i = 1;
-            foreach (ToDoUser user in users)
-            {
-                string nickname = user.UserName != null ? $"{user.UserName};" : "";
-                string firstname = user.FirstName != null ? $"{user.FirstName};" : "";
-                string lastname = user.LastName != null ? $"{user.LastName};" : "";
-                sb.AppendLine($"{i++}){nickname}; {lastname} {firstname}");
-            }
-            await botClient.SendMessage(update.Message.Chat, $"{sb.ToString()}", cancellationToken:ct);
         }
 
         private async Task StartCommand(ITelegramBotClient botClient,Update update, CancellationToken ct)
@@ -261,14 +286,14 @@ namespace MyShift
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
 /create_template - процесс создания шаблона графиков;
 /create_schedule - процесс создания графика для пользователя
-/график - показывает текущий график;
+/schedule - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
 /requests - выводит список заявок;", cancellationToken:ct);
                 else if (toDoUser.Role == Role.Moderator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
-/график - показывает текущий график;
+/schedule - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
 /requests - выводит список заявок;", cancellationToken: ct);
             }

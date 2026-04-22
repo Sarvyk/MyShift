@@ -81,7 +81,7 @@ namespace MyShift.Core.Scenarios
             }
 
             int userId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
-            if((await _scheduleRequestService.GetActiveScheduleByUser(userId,ct)) != null)
+            if((await _scheduleRequestService.GetActiveScheduleByUserAsync(userId,ct)) != null)
             {
                 await botClient.SendMessage(context.Data["ChatId"].ToString(), "У этого пользователя уже есть активный график!", cancellationToken: ct);
                 return ScenarioResult.Completed;

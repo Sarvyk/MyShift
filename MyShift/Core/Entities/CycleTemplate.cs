@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyShift.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace MyShift.Core.Entities
     { }
     internal class CycleItem
     {
-        public string TypeShift { get; set; }
+        public ShiftType TypeShift { get; set; }
         public TimeSpan? Start { get; set; }
         public TimeSpan? End { get; set; }
     }

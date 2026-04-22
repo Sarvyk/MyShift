@@ -18,6 +18,7 @@ namespace MyShift.Core.Interfaces
         Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct);
         Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct);
         Task<UserSchedule?> GetScheduleAsync(int scheduleId,CancellationToken ct);
-        Task<UserSchedule?> GetActiveScheduleByUser(int userId, CancellationToken ct);
+        Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct);
+        Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct);
     }
 }

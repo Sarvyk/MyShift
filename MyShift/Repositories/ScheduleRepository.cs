@@ -66,9 +66,19 @@ namespace MyShift.Repositories
             return await _context.Schedule_Templates.FirstOrDefaultAsync(tmp => tmp.Id == id, cancellationToken: ct);
         }
 
-        public async Task<UserSchedule?> GetActiveScheduleByUser(int userId, CancellationToken ct)
+        public async Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct)
         {
-            return await _context.UserSchedules.FirstOrDefaultAsync(sch => sch.UserId == userId && sch.IsActive == true);
+            return await _context.UserSchedules
+                .Include(us => us.User)
+                .Include(us => us.AssignedBy)
+                .Include(us => us.Template)
+                .Include(us => us.Shifts)
+                .FirstOrDefaultAsync(us => us.UserId == userId && us.IsActive == true);
+        }
+
+        public async Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct)
+        {
+            return await _context.Shifts.FirstOrDefaultAsync(sch => sch.Id == scheduleId);
         }
     }
 }

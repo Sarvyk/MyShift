@@ -58,11 +58,11 @@ namespace MyShift.Core.Scenarios
                         DayTemplate dayTemplate = new DayTemplate();
                         dayTemplate.Days = string.Join(',', message.Text.Split(',').Select(Int32.Parse).OrderBy(n => n));
                         context.Data["templateJson"] = dayTemplate;
-                        await botClient.SendMessage(message.Chat, "День или ночь?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("День", "Day"), new InlineKeyboardButton("Ночь", "Night")), cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "День или ночь?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton(ShiftType.day.GetDisplayShortName(), "1"), new InlineKeyboardButton(ShiftType.night.GetDisplayShortName(), "2")), cancellationToken: ct);
                         context.CurrentStep = "selectedStartTime";
                         return ScenarioResult.Transition;
                     case "selectedStartTime":
-                        ((DayTemplate)context.Data["templateJson"]).Type = context.Data["Callback"].ToString();
+                        ((DayTemplate)context.Data["templateJson"]).Type = (ShiftType)Int32.Parse(context.Data["Callback"].ToString());
                         await botClient.SendMessage(message.Chat, "Введите время начала смены в формате '05:25'", cancellationToken: ct);
                         context.CurrentStep = "selectedEndTime";
                         return ScenarioResult.Transition;
@@ -103,14 +103,14 @@ namespace MyShift.Core.Scenarios
                             }
                             if (!context.Data.ContainsKey("templateJson"))
                                 context.Data.Add("templateJson", new CycleTemplate());
-                            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите тип смены", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Дневная", "Day"), new InlineKeyboardButton("Ночная", "Night"), new InlineKeyboardButton("Выходной", "off")), cancellationToken: ct);
+                            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите тип смены", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton(ShiftType.day.GetDisplayShortName(), "1"), new InlineKeyboardButton(ShiftType.night.GetDisplayShortName(), "2"), new InlineKeyboardButton(ShiftType.off.GetDisplayShortName(), "3")), cancellationToken: ct);
                             context.CurrentStep = "SelectedStartTime";
                             return ScenarioResult.Transition;
                         case "SelectedStartTime":
                             CycleItem cycleItem = new CycleItem();
-                            cycleItem.TypeShift = context.Data["Callback"].ToString();
+                            cycleItem.TypeShift = (ShiftType)Int32.Parse(context.Data["Callback"].ToString());
                             ((CycleTemplate)context.Data["templateJson"]).Add(cycleItem);
-                            if(context.Data["Callback"].ToString() == "off")
+                            if(context.Data["Callback"].ToString() == "3")
                             {
                                 restart = true;
                                 context.CurrentStep = "CreateNew";
@@ -126,7 +126,7 @@ namespace MyShift.Core.Scenarios
                             context.CurrentStep = "CreateNew";
                             return ScenarioResult.Transition;
                         case "CreateNew":
-                            if (context.Data["Callback"].ToString() != "off")
+                            if (context.Data["Callback"].ToString() != "3")
                             {
                                 TextIsValidate(1, message.Text.Trim());
                                 ((CycleTemplate)context.Data["templateJson"]).LastOrDefault().End = TimeSpan.Parse(message.Text);
