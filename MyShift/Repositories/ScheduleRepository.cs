@@ -69,16 +69,40 @@ namespace MyShift.Repositories
         public async Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct)
         {
             return await _context.UserSchedules
+                .AsNoTracking()
                 .Include(us => us.User)
                 .Include(us => us.AssignedBy)
                 .Include(us => us.Template)
-                .Include(us => us.Shifts)
+                .Include(us => us.Shifts.Where(s => s.Status == true))
                 .FirstOrDefaultAsync(us => us.UserId == userId && us.IsActive == true);
         }
 
         public async Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct)
         {
             return await _context.Shifts.FirstOrDefaultAsync(sch => sch.Id == scheduleId);
+        }
+
+        public async Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct)
+        {
+            return await _context.UserSchedules
+                .AsNoTracking()
+                .Include(us => us.User)
+                .Include(us => us.AssignedBy)
+                .Include(us => us.Template)
+                .Include(us => us.Shifts.Where(s => s.Status == true))
+                .Where(us => us.IsActive == true).ToListAsync(ct);
+        }
+
+        public async Task DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct)
+        {
+            await _context.UserSchedules.Where(sch => sch.Id == scheduleId)
+                .ExecuteUpdateAsync(set => set.SetProperty(prop => prop.IsActive, false));
+        }
+
+        public async Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct)
+        {
+            await _context.Shifts.Where(s => s.Id == shiftId)
+                .ExecuteUpdateAsync(s => s.SetProperty(prop => prop.Status, false));
         }
     }
 }

@@ -21,6 +21,8 @@ namespace MyShift.Core.Interfaces
         Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct);
         Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct);
         Task EditShiftScheduleAsync( CancellationToken ct);
-        Task DeleteScheduleAsync( CancellationToken ct);
+        Task DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct);
+        Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct);
+        Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct);
     }
 }

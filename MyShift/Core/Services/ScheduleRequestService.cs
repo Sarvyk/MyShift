@@ -47,7 +47,7 @@ namespace MyShift.Core.Services
                     Weekday weekDay = Enum.GetValues<Weekday>().Cast<Weekday>().ToArray().FirstOrDefault(wd => wd.GetDisplayShortName().ToLower() == dayWeekStr);
                     if (shifts[i] == (int)weekDay)
                     {
-                        shiftList.Add(new Shift(schedule.Id, workDay, dayTemplate.Start, dayTemplate.End, dayTemplate.Type, 1));
+                        shiftList.Add(new Shift(schedule.Id, workDay, dayTemplate.Start, dayTemplate.End, dayTemplate.Type, true));
                         if (i == shifts.Length - 1)
                             i = 0;
                         else
@@ -68,7 +68,7 @@ namespace MyShift.Core.Services
                 var shiftList = new List<Shift>();
                 while (workDay <= schedule.EndDate)
                 {
-                    shiftList.Add(new Shift(schedule.Id, workDay, cycleTemplate[i].Start, cycleTemplate[i].End, cycleTemplate[i].TypeShift, 1));
+                    shiftList.Add(new Shift(schedule.Id, workDay, cycleTemplate[i].Start, cycleTemplate[i].End, cycleTemplate[i].TypeShift, true));
                     if (i == cycleTemplate.Count-1)
                     {
                         i = 0;
@@ -141,6 +141,21 @@ namespace MyShift.Core.Services
         public async Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct)
         {
             return await _scheduleRepository.GetShiftByIdAsync(scheduleId, ct);
+        }
+
+        public async Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct)
+        {
+            return await _scheduleRepository.GetActiveSchedulesAsync(ct);
+        }
+
+        public async Task DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct)
+        {
+            await _scheduleRepository.DeleteScheduleByScheduleIdAsync(scheduleId, ct);
+        }
+
+        public async Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct)
+        {
+            await _scheduleRepository.DeleteShiftByShiftIdAsync(shiftId, ct);
         }
     }
 }

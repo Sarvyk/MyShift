@@ -17,12 +17,12 @@ namespace MyShift.Core.Models
         public TimeSpan? StartTime { get; set; } // время начала (например, 09:00)
         public TimeSpan? EndTime { get; set; }   // время окончания (например, 18:00)
         public ShiftType ShiftType { get; set; } // "Day", "Night", "Off"
-        public int Status { get; set; } // 0 = активна, 1 = отменена
+        public bool Status { get; set; } // 0 = активна, 1 = отменена
         public string? CancelReason { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public Shift() { }
-        public Shift(int userScheduleId, DateTime shiftDate, TimeSpan? start, TimeSpan? end, ShiftType shiftType, int status)
+        public Shift(int userScheduleId, DateTime shiftDate, TimeSpan? start, TimeSpan? end, ShiftType shiftType, bool status)
         {
             UserScheduleId = userScheduleId;
             ShiftDate = shiftDate;

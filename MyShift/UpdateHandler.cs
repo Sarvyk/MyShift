@@ -100,40 +100,20 @@ namespace MyShift
                 case "/requests":
                     if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
                     {
-                        ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken)).Id, cancellationToken);
-                        IReadOnlyList<Request> requests = await _scheduleRequestService.GetRequestsAsync(user.Id, cancellationToken);
-                        List<KeyValuePair<string, string>> callbackData = new List<KeyValuePair<string, string>>();
-                        foreach (Request request in requests)
-                        {
-                            callbackData.Add(GetFormatAnswerRequest(request));
-                        }
-                        if (callbackData.Count == 0)
-                        {
-                            await botClient.SendMessage(update.Message.Chat, "Вы ещё не подавали заявки", cancellationToken: cancellationToken);
-                            break;
-                        }
-                        await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showRequestPageNext||0")), cancellationToken: cancellationToken);
+                        await GetRequest(botClient, update, cancellationToken);
                     }
                     break;
                 case "/schedule":
                     if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
                     {
-                        UserSchedule userSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, cancellationToken)).Id, cancellationToken);
-                        var callbackData = new List<KeyValuePair<string, string>>();
-                        foreach (Shift shift in userSchedule.Shifts)
-                        {
-                            callbackData.Add(GetFormatAnswerShift(shift));
-                        }
-                        await botClient.SendMessage(update.Message.Chat, "Выберите смену", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: cancellationToken);
+                        await GetSchedule(botClient, update, cancellationToken);
                     }
                     break;
                 case "/create_schedule":
-                    context = new ScenarioContext(ScenarioType.Add_Schedule);
-                    context.Data.Add("TelegramUserId", update.Message.From.Id);
-                    context.Data.Add("ChatId", update.Message.Chat.Id);
-                    context.Data.Add("Callback", string.Empty);
-                    await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
-                    await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                    await CreateSchedule(botClient, update, context, cancellationToken);
+                    break;
+                case "/edit_schedule":
+                    await EditSchedule(botClient, update, cancellationToken);
                     break;
                 case "/create_template":
                     context = new ScenarioContext(ScenarioType.Add_Template);
@@ -155,6 +135,7 @@ namespace MyShift
             if (context != null)
             {
                 context.Data["Callback"] = update.CallbackQuery.Data;
+                context.Data["CallbackMessage"] = update.CallbackQuery.Message;
                 context.Data["TelegramUserId"] = update.CallbackQuery.From.Id;
                 context.Data["ChatId"] = update.CallbackQuery.Message.Chat.Id;
                 await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
@@ -200,7 +181,7 @@ namespace MyShift
                                 await botClient.SendMessage(update.CallbackQuery.Message.Chat, $"На {shift.ShiftDate.ToString("d")} назначен выходной день.", cancellationToken: ct);
                                 return;
                             }
-                            string answer = $"{shift.ShiftType.GetDisplayName()} на {shift.ShiftDate.ToString("D")}\r\nВремя с {shift.StartTime.Value.ToString(@"hh\:mm")} до {shift.EndTime.Value.ToString(@"hh\:mm")}{(shift.Status == 1?"": "\r\nСтатус:отменена")}";
+                            string answer = $"{shift.ShiftType.GetDisplayName()} на {shift.ShiftDate.ToString("D")}\r\nВремя с {shift.StartTime.Value.ToString(@"hh\:mm")} до {shift.EndTime.Value.ToString(@"hh\:mm")}{(shift.Status == true?"": "\r\nСтатус:отменена")}";
                             await botClient.SendMessage(update.CallbackQuery.Message.Chat, answer, cancellationToken: ct);
                         }
                         else if(a.Data.StartsWith("showShiftsPagePrev") || a.Data.StartsWith("showShiftsPageNext"))
@@ -224,8 +205,57 @@ namespace MyShift
                     break;
             }
         }
+        private async Task GetRequest(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        {
+            ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Id, ct);
+            IReadOnlyList<Request> requests = await _scheduleRequestService.GetRequestsAsync(user.Id, ct);
+            var callbackData = new List<KeyValuePair<string, string>>();
+            foreach (Request request in requests)
+            {
+                callbackData.Add(GetFormatAnswerRequest(request));
+            }
+            if (callbackData.Count == 0)
+            {
+                await botClient.SendMessage(update.Message.Chat, "Вы ещё не подавали заявки", cancellationToken: ct);
+                return;
+            }
+            await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showRequestPageNext||0")), cancellationToken: ct);
+        }
+        private async Task GetSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        {
+            UserSchedule userSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Id, ct);
+            if (userSchedule == null)
+            {
+                await botClient.SendMessage(update.Message.Chat, "У вас отсутствует график", cancellationToken: ct);
+                return;
+            }
+            var callbackData = new List<KeyValuePair<string, string>>();
+            foreach (Shift shift in userSchedule.Shifts)
+            {
+                callbackData.Add(GetFormatAnswerShift(shift));
+            }
+            await botClient.SendMessage(update.Message.Chat, "Выберите смену", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: ct);
+        }
+        private async Task CreateSchedule(ITelegramBotClient botClient, Update update, ScenarioContext context, CancellationToken ct)
+        {
+            context = new ScenarioContext(ScenarioType.Add_Schedule);
+            context.Data.Add("TelegramUserId", update.Message.From.Id);
+            context.Data.Add("ChatId", update.Message.Chat.Id);
+            context.Data.Add("Callback", string.Empty);
+            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
+            await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
+        }
+        private async Task EditSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        {
+            ScenarioContext context = new ScenarioContext(ScenarioType.Edit_Schedule);
+            context.Data.Add("TelegramUserId", update.Message.From.Id);
+            context.Data.Add("ChatId", update.Message.Chat.Id);
+            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
+            await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
+        }
         private KeyValuePair<string,string> GetFormatAnswerRequest(Request request) => new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString());
         private KeyValuePair<string, string> GetFormatAnswerShift(Shift shift) => new KeyValuePair<string, string>(shift.ShiftDate.ToString("d"), ToDoItemCallbackDto.FromString($"showShift|{shift.Id}").ToString());
+        private KeyValuePair<string, string> GetFormatAnswerUser(ToDoUser user) => new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString());
         private async Task ProcessScenario(ITelegramBotClient botClient, ScenarioContext context, User user, Message msg, CancellationToken ct)
         {
             IScenario scenario = GetScenario(context.CurrentScenario);
@@ -285,7 +315,8 @@ namespace MyShift
                 if (toDoUser.Role == Role.Administrator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
 /create_template - процесс создания шаблона графиков;
-/create_schedule - процесс создания графика для пользователя
+/create_schedule - процесс создания графика для пользователя;
+/edit_schedule - редактирование графиков
 /schedule - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
 /requests - выводит список заявок;", cancellationToken:ct);
