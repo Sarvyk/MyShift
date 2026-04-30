@@ -95,14 +95,16 @@ namespace MyShift.Repositories
 
         public async Task DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct)
         {
-            await _context.UserSchedules.Where(sch => sch.Id == scheduleId)
-                .ExecuteUpdateAsync(set => set.SetProperty(prop => prop.IsActive, false));
+            UserSchedule schedule = await _context.UserSchedules.FirstOrDefaultAsync(sch => sch.Id == scheduleId);
+            schedule.IsActive = false;
+            await _context.SaveChangesAsync(ct);
         }
 
         public async Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct)
         {
-            await _context.Shifts.Where(s => s.Id == shiftId)
-                .ExecuteUpdateAsync(s => s.SetProperty(prop => prop.Status, false));
+            Shift shift = await _context.Shifts.FirstOrDefaultAsync(s => s.Id == shiftId);
+            shift.Status = false;
+            await _context.SaveChangesAsync(ct);
         }
     }
 }
