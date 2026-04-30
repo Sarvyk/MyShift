@@ -12,6 +12,7 @@ namespace MyShift.Core.Enums
         None = 0,
         User = 1,
         Moderator = 1 << 1,
-        Administrator = 1 << 2
+        Administrator = 1 << 2,
+        SuperAdministrator = 1 << 3
     }
 }

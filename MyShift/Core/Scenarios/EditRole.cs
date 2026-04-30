@@ -29,10 +29,12 @@ namespace MyShift.Core.Scenarios
             {
                 case null:
                     ToDoUser me = await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct);
-                    // В этом запросе нужно будет переделать под главного админа ещё, чтобы он мог менять роли и у себе подобных, но только он!
-                    // но пока оставим так как есть
-                    IReadOnlyList<ToDoUser> users = (await _userService.GetAllUsers(ct)).Where(user => user.Role<me.Role && user.Id != me.Id).ToList();
-                    if(users.Count == 0)
+                    IReadOnlyList<ToDoUser> users = null;
+                    if (me.Role != Role.SuperAdministrator)
+                        users = (await _userService.GetAllUsers(ct)).Where(user => user.Role<me.Role && user.Id != me.Id).ToList();
+                    else
+                        users = (await _userService.GetAllUsers(ct)).Where(user => user.Id != me.Id).ToList();
+                    if (users.Count == 0)
                     {
                         await botClient.SendMessage(message.Chat, "Пользователи не найдены!", cancellationToken: ct);
                         return ScenarioResult.Completed;
@@ -64,23 +66,27 @@ namespace MyShift.Core.Scenarios
                         return ScenarioResult.Transition;
                     }
                     context.Data.Add("userId", context.Data["Callback"].ToString());
-                    var roles = Enum.GetValues<Role>();
-                    InlineKeyboardButton[] buttons = new InlineKeyboardButton[roles.Length];
+                    List<Role> roles = new List<Role>();
+                    if(me.Role == Role.SuperAdministrator)
+                      roles = Enum.GetValues<Role>().ToList();
+                    else
+                        roles = Enum.GetValues<Role>().Where(r => ((int)r) < (int)me.Role).ToList();
+                    InlineKeyboardButton[] buttons = new InlineKeyboardButton[roles.Count];
                     int i = 0;
                     foreach (Role role in roles)
                     {
                         buttons[i++] = new InlineKeyboardButton(role.ToString(), ((int)role).ToString());
                     }
-                    await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "Выберите действие", replyMarkup: new InlineKeyboardMarkup().AddNewRow(buttons), cancellationToken: ct);
+                    await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "Выберите роль", replyMarkup: new InlineKeyboardMarkup().AddNewRow(buttons), cancellationToken: ct);
                     context.CurrentStep = "selectedRole";
                     return ScenarioResult.Transition;
                 case "selectedRole":
                     int userId = ToDoItemCallbackDto.FromString(context.Data["userId"].ToString()).ToDoItemId;
                     Role roleResult = (Role)Int32.Parse(context.Data["Callback"].ToString());
                     await _userService.SetRole(userId, roleResult, ct);
+                    await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userId}\" успешно изменена на \"{roleResult}\"",  cancellationToken: ct);
                     break;
             }
-            await botClient.SendMessage(message.Chat, "Роль успешно изменена",  cancellationToken: ct);
             return ScenarioResult.Completed;
         }
     }
