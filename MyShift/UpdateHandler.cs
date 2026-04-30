@@ -75,6 +75,9 @@ namespace MyShift
         {
             ScenarioContext? context;
             context = await _scenarioContextRepository.GetContext(update.Message.From.Id, cancellationToken);
+            Role all = Role.User | Role.Moderator | Role.Administrator | Role.SuperAdministrator;
+            Role nonUser = Role.Moderator | Role.Administrator | Role.SuperAdministrator;
+            Role onlyAdministrator = Role.Administrator | Role.SuperAdministrator;
             if (context != null)
             {
                 await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
@@ -90,7 +93,7 @@ namespace MyShift
                     await HelpCommand(botClient, update, cancellationToken);
                     break;
                 case string a when a.StartsWith("/add_request"):
-                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                    if (await CheckCredentials(botClient, update, update.Message.From, all, cancellationToken))
                     {
                         context = new ScenarioContext(ScenarioType.Add_Request);
                         await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
@@ -98,36 +101,48 @@ namespace MyShift
                     }
                     break;
                 case "/requests":
-                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                    if (await CheckCredentials(botClient, update, update.Message.From, all, cancellationToken))
                     {
                         await GetRequest(botClient, update, cancellationToken);
                     }
                     break;
                 case "/schedule":
-                    if (await CheckCredentials(update.Message.From, Role.User | Role.Moderator | Role.Administrator, cancellationToken))
+                    if (await CheckCredentials(botClient, update, update.Message.From, all, cancellationToken))
                     {
                         await GetSchedule(botClient, update, cancellationToken);
                     }
                     break;
                 case "/create_schedule":
-                    await CreateSchedule(botClient, update, context, cancellationToken);
+                    if (await CheckCredentials(botClient, update, update.Message.From, nonUser, cancellationToken))
+                    {
+                        await CreateSchedule(botClient, update, context, cancellationToken);
+                    }
                     break;
                 case "/edit_schedule":
-                    await EditSchedule(botClient, update, cancellationToken);
+                    if (await CheckCredentials(botClient, update, update.Message.From, nonUser, cancellationToken))
+                    {
+                        await EditSchedule(botClient, update, cancellationToken);
+                    }
                     break;
                 case "/create_template":
-                    context = new ScenarioContext(ScenarioType.Add_Template);
-                    context.Data.Add("TelegramUserId", update.Message.From.Id);
-                    context.Data.Add("ChatId", update.Message.Chat.Id);
-                    await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
-                    await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                    if (await CheckCredentials(botClient, update, update.Message.From, onlyAdministrator, cancellationToken))
+                    {
+                        context = new ScenarioContext(ScenarioType.Add_Template);
+                        context.Data.Add("TelegramUserId", update.Message.From.Id);
+                        context.Data.Add("ChatId", update.Message.Chat.Id);
+                        await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
+                        await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                    }
                     break;
                 case "/edit_role":
-                    context = new ScenarioContext(ScenarioType.Edit_Role);
-                    context.Data.Add("TelegramUserId", update.Message.From.Id);
-                    context.Data.Add("ChatId", update.Message.Chat.Id);
-                    await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
-                    await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                    if (await CheckCredentials(botClient, update, update.Message.From, nonUser, cancellationToken))
+                    {
+                        context = new ScenarioContext(ScenarioType.Edit_Role);
+                        context.Data.Add("TelegramUserId", update.Message.From.Id);
+                        context.Data.Add("ChatId", update.Message.Chat.Id);
+                        await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
+                        await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                    }
                     break;
                 default:
                     await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: cancellationToken);
@@ -295,7 +310,7 @@ namespace MyShift
                 await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот \"Мой график\"!", cancellationToken: ct);
             }
         }
-        private async Task<bool> CheckCredentials(User user, Role roles, CancellationToken ct)
+        private async Task<bool> CheckCredentials(ITelegramBotClient botClient, Update update, User user, Role roles, CancellationToken ct)
         {
             ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(user.Id,ct);
             if(toDoUser != null)
@@ -306,11 +321,13 @@ namespace MyShift
                 }
                 else
                 {
+                    await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: ct);
                     return false;
                 }
             }
             else
             {
+                await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: ct);
                 return false;
             }
         }
