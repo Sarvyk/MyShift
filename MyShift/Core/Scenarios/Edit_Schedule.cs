@@ -63,7 +63,7 @@ namespace MyShift.Core.Scenarios
                         await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "Выберите пользователя.", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString(context.Data["Callback"].ToString())), cancellationToken: ct);
                         return ScenarioResult.Transition;
                     }
-                    callbackMessage = (Message)context.Data["CallbackMessage"];
+                    //callbackMessage = (Message)context.Data["CallbackMessage"];
                     context.Data.Add("scheduleId", ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId);
                     UserSchedule selectedUserSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync(ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId,ct);
                     await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "Что вы хотите сделать с графиком данного пользователя?", replyMarkup: new InlineKeyboardMarkup().AddNewRow(new InlineKeyboardButton[]{new InlineKeyboardButton("Отменить график","cancelSchedule"), new InlineKeyboardButton("Отменить смену", "cancelShift")}), cancellationToken: ct);

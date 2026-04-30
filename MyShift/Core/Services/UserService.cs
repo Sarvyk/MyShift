@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Interfaces;
+﻿using MyShift.Core.Enums;
+using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using System;
 using System.Collections.Generic;
@@ -37,6 +38,11 @@ namespace MyShift.Core.Services
             ToDoUser toDoUser = new ToDoUser(chatId, userData.Id, userData.Username, userData.FirstName, userData.LastName);
             await _userRepository.RegisterUserAsync(toDoUser, ct);
             return toDoUser;
+        }
+
+        public async Task SetRole(int userId, Role role, CancellationToken ct)
+        {
+            await _userRepository.SetRole(userId, role, ct);
         }
     }
 }

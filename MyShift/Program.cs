@@ -28,7 +28,8 @@ namespace MyShift
                     new Delete_Request(scheduleRequestService),
                     new Add_Template(userService, scheduleRequestService),
                     new Add_Schedule(userService, scheduleRequestService),
-                    new Edit_Schedule(userService, scheduleRequestService)
+                    new Edit_Schedule(userService, scheduleRequestService),
+                    new EditRole(userService, scheduleRequestService)
                 };
                 var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, new InMemoryScenarioContextRepository());
                 botClient.StartReceiving(handle);

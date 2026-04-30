@@ -122,6 +122,13 @@ namespace MyShift
                     await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
                     await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
                     break;
+                case "/edit_role":
+                    context = new ScenarioContext(ScenarioType.Edit_Role);
+                    context.Data.Add("TelegramUserId", update.Message.From.Id);
+                    context.Data.Add("ChatId", update.Message.Chat.Id);
+                    await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
+                    await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                    break;
                 default:
                     await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: cancellationToken);
                     await HelpCommand(botClient, update, cancellationToken);
@@ -319,6 +326,7 @@ namespace MyShift
 /edit_schedule - редактирование графиков
 /schedule - показывает текущий график;
 /add_request - создаёт заявку на смену расписания;
+/edit_role - смена ролей;
 /requests - выводит список заявок;", cancellationToken:ct);
                 else if (toDoUser.Role == Role.Moderator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);

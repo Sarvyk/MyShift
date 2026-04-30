@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Models;
+﻿using MyShift.Core.Enums;
+using MyShift.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,6 @@ namespace MyShift.Core.Interfaces
         Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken ct);
         Task<ToDoUser?> RegisterUserAsync(long chatId,User userData, CancellationToken ct);
         Task<IReadOnlyList<ToDoUser>> GetAllUsers(CancellationToken ct);
+        Task SetRole(int userId, Role role, CancellationToken ct);
     }
 }
