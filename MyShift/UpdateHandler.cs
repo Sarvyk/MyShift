@@ -127,21 +127,13 @@ namespace MyShift
                 case "/create_template":
                     if (await CheckCredentials(botClient, update, update.Message.From, onlyAdministrator, cancellationToken))
                     {
-                        context = new ScenarioContext(ScenarioType.Add_Template);
-                        context.Data.Add("TelegramUserId", update.Message.From.Id);
-                        context.Data.Add("ChatId", update.Message.Chat.Id);
-                        await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
-                        await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                        await CreateTemplate(botClient, update, context, cancellationToken);
                     }
                     break;
                 case "/edit_role":
                     if (await CheckCredentials(botClient, update, update.Message.From, nonUser, cancellationToken))
                     {
-                        context = new ScenarioContext(ScenarioType.Edit_Role);
-                        context.Data.Add("TelegramUserId", update.Message.From.Id);
-                        context.Data.Add("ChatId", update.Message.Chat.Id);
-                        await _scenarioContextRepository.SetContext(update.Message.From.Id, context, cancellationToken);
-                        await ProcessScenario(botClient, context, update.Message.From, update.Message, cancellationToken);
+                        await EditRole(botClient, update, context, cancellationToken);
                     }
                     break;
                 default:
@@ -258,6 +250,14 @@ namespace MyShift
             }
             await botClient.SendMessage(update.Message.Chat, "Выберите смену", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: ct);
         }
+        private async Task EditSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        {
+            ScenarioContext context = new ScenarioContext(ScenarioType.Edit_Schedule);
+            context.Data.Add("TelegramUserId", update.Message.From.Id);
+            context.Data.Add("ChatId", update.Message.Chat.Id);
+            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
+            await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
+        }
         private async Task CreateSchedule(ITelegramBotClient botClient, Update update, ScenarioContext context, CancellationToken ct)
         {
             context = new ScenarioContext(ScenarioType.Add_Schedule);
@@ -267,9 +267,17 @@ namespace MyShift
             await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
             await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
         }
-        private async Task EditSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        private async Task CreateTemplate(ITelegramBotClient botClient, Update update, ScenarioContext context, CancellationToken ct)
         {
-            ScenarioContext context = new ScenarioContext(ScenarioType.Edit_Schedule);
+            context = new ScenarioContext(ScenarioType.Add_Template);
+            context.Data.Add("TelegramUserId", update.Message.From.Id);
+            context.Data.Add("ChatId", update.Message.Chat.Id);
+            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
+            await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
+        }
+        private async Task EditRole(ITelegramBotClient botClient, Update update, ScenarioContext context, CancellationToken ct)
+        {
+            context = new ScenarioContext(ScenarioType.Edit_Role);
             context.Data.Add("TelegramUserId", update.Message.From.Id);
             context.Data.Add("ChatId", update.Message.Chat.Id);
             await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
