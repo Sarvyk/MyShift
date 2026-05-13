@@ -10,11 +10,11 @@ namespace MyShift.Core.Enums
     public enum ShiftType
     {
         none,
-        [Display(Name = "дневная смена", ShortName = "день")]
+        [Display(Name = "дневная смена☀️", ShortName = "день")]
         day,
-        [Display(Name = "ночная смена", ShortName = "ночь")]
+        [Display(Name = "ночная смена🌙", ShortName = "ночь")]
         night,
-        [Display(Name = "выходной", ShortName = "выходной")]
+        [Display(Name = "выходной🛌", ShortName = "выходной")]
         off
     }
 }

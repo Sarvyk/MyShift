@@ -28,14 +28,14 @@ namespace MyShift.Core.Scenarios
             switch (context.CurrentStep)
             {
                 case null:
-                    await botClient.SendMessage(message.Chat, "Опишите причину заявки", cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, "Опишите причину заявки✍️", cancellationToken: ct);
                     context.CurrentStep = "Reason";
                     context.Data.Add("User", await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(message.From.Id, ct)).Id, ct));
                     return ScenarioResult.Transition;
                 case "Reason":
                     ToDoUser user = (ToDoUser)context.Data["User"];
                     await _scheduleRequestService.InsertRequestAsync(user.Id, message.Text, ct);
-                    await botClient.SendMessage(message.Chat, $"{user.FirstName}, Заявка добавлена. Ожидайте ответа", cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, $"{user.FirstName}, Заявка добавлена.✅ Ожидайте ответа", cancellationToken: ct);
                     break;
             }
             return ScenarioResult.Completed;

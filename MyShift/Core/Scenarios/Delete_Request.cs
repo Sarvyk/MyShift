@@ -32,19 +32,19 @@ namespace MyShift.Core.Scenarios
                 case null:
                     int requestId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
                     context.Data.Add("RequestId", requestId);
-                    await botClient.SendMessage(message.Chat, $"Подтверждение удаления заявки", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("✅Да", "yes"), new InlineKeyboardButton("❌Нет", "no")), cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, $"Подтверждаете удаление заявки❓", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("✅Да", "yes"), new InlineKeyboardButton("❌Нет", "no")), cancellationToken: ct);
                     context.CurrentStep = "Approve";
                     return ScenarioResult.Transition;
                 case "Approve":
                     if (context.Data["Callback"].ToString() == "no")
                     {
-                        await botClient.SendMessage(message.Chat, $"Удаление отменено", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, $"Удаление отменено↩️", cancellationToken: ct);
                         return ScenarioResult.Completed;
                     }
                     await _scheduleRequestService.DeleteRequestAsync(Int32.Parse(context.Data["RequestId"].ToString()), ct);
                     break;
             }
-            await botClient.SendMessage(message.Chat, $"Заявка удалена", cancellationToken: ct);
+            await botClient.SendMessage(message.Chat, $"Заявка удалена🗑️✅", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
     }

@@ -36,15 +36,15 @@ namespace MyShift.Core.Scenarios
                         users = (await _userService.GetAllUsers(ct)).Where(user => user.Id != me.Id).ToList();
                     if (users.Count == 0)
                     {
-                        await botClient.SendMessage(message.Chat, "Пользователи не найдены!", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Пользователи не найдены!🔍❌", cancellationToken: ct);
                         return ScenarioResult.Completed;
                     }
                     var callbackData = new List<KeyValuePair<string, string>>();
                     foreach (ToDoUser user in users)
                     {
-                        callbackData.Add(new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}({user.Role})", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString()));
+                        callbackData.Add(new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}({user.Role.GetDisplayName()})", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString()));
                     }
-                    await botClient.SendMessage(message.Chat, "Выберите пользователя", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
                     context.CurrentStep = "selectUser";
                     return ScenarioResult.Transition;
                 case "selectUser":
@@ -55,14 +55,14 @@ namespace MyShift.Core.Scenarios
                     {
                         foreach (ToDoUser user in users)
                         {
-                            callbackData.Add(new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}({user.Role})", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString()));
+                            callbackData.Add(new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}({user.Role.GetDisplayName()})", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString()));
                         }
                     }
                     Message callbackMessage = (Message)context.Data["CallbackMessage"];
                     if (context.Data["Callback"].ToString().StartsWith("showUserPageNext"))
                     {
                         // Если мы получаем в колбеке данные о кнопках смены страниц, то попадаем сюда и меняем страницу, а дальше сохраняем шаг тем же.
-                        await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "Выберите пользователя", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString(context.Data["Callback"].ToString())), cancellationToken: ct);
+                        await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString(context.Data["Callback"].ToString())), cancellationToken: ct);
                         return ScenarioResult.Transition;
                     }
                     context.Data.Add("userId", context.Data["Callback"].ToString());
@@ -71,20 +71,19 @@ namespace MyShift.Core.Scenarios
                       roles = Enum.GetValues<Role>().ToList();
                     else
                         roles = Enum.GetValues<Role>().Where(r => ((int)r) < (int)me.Role).ToList();
-                    InlineKeyboardButton[] buttons = new InlineKeyboardButton[roles.Count];
-                    int i = 0;
+                    InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
                     foreach (Role role in roles)
                     {
-                        buttons[i++] = new InlineKeyboardButton(role.ToString(), ((int)role).ToString());
+                        markup.AddNewRow(new InlineKeyboardButton[] { new InlineKeyboardButton(role.GetDisplayName(), ((int)role).ToString()) });
                     }
-                    await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "Выберите роль", replyMarkup: new InlineKeyboardMarkup().AddNewRow(buttons), cancellationToken: ct);
+                    await botClient.EditMessageText(callbackMessage.Chat, callbackMessage.MessageId, "🎭Выберите роль🎭", replyMarkup: markup, cancellationToken: ct);
                     context.CurrentStep = "selectedRole";
                     return ScenarioResult.Transition;
                 case "selectedRole":
                     int userId = ToDoItemCallbackDto.FromString(context.Data["userId"].ToString()).ToDoItemId;
                     Role roleResult = (Role)Int32.Parse(context.Data["Callback"].ToString());
                     await _userService.SetRole(userId, roleResult, ct);
-                    await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userId}\" успешно изменена на \"{roleResult}\"",  cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userId}\" успешно изменена на\r\n\"{roleResult.GetDisplayName()}\"✅",  cancellationToken: ct);
                     break;
             }
             return ScenarioResult.Completed;

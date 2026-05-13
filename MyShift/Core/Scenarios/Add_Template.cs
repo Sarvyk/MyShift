@@ -29,7 +29,7 @@ namespace MyShift.Core.Scenarios
             if (!context.Data.ContainsKey("template"))
             {
                 context.Data.Add("template", new ScheduleTemplate());
-                await botClient.SendMessage(message.Chat, "Выберите тип графика", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Линейны", "0"), new InlineKeyboardButton("Циклический", "1")), cancellationToken: ct);
+                await botClient.SendMessage(message.Chat, "Выберите тип графика🗓️", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Линейный➡️", "0"), new InlineKeyboardButton("Циклический🔁", "1")), cancellationToken: ct);
                 context.CurrentStep = "SetScheduleType";
                 return ScenarioResult.Transition;
             }
@@ -45,12 +45,12 @@ namespace MyShift.Core.Scenarios
                 {
                     case null:
                         ((ScheduleTemplate)context.Data["template"]).CreatorBy = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id, ct);
-                        await botClient.SendMessage(message.Chat, "Введите название шаблона", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Введите название шаблона✍️", cancellationToken: ct);
                         context.CurrentStep = "selectDayWeek";
                         return ScenarioResult.Transition;
                     case "selectDayWeek":
                         ((ScheduleTemplate)context.Data["template"]).Name = message.Text;
-                        await botClient.SendMessage(message.Chat, "Введите список дней недели в цифрах, где Пн -> 1, Вт -> 2...Вс ->7. Пример ввода: 1,3,5,7", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Введите список дней недели в цифрах, где Пн -> 1, Вт -> 2...Вс ->7. Пример ввода: 1,3,5,7✍️🔢", cancellationToken: ct);
                         context.CurrentStep = "selectDayPart";
                         return ScenarioResult.Transition;
                     case "selectDayPart":
@@ -58,19 +58,19 @@ namespace MyShift.Core.Scenarios
                         DayTemplate dayTemplate = new DayTemplate();
                         dayTemplate.Days = string.Join(',', message.Text.Split(',').Select(Int32.Parse).OrderBy(n => n));
                         context.Data["templateJson"] = dayTemplate;
-                        await botClient.SendMessage(message.Chat, "День или ночь?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton(ShiftType.day.GetDisplayShortName(), "1"), new InlineKeyboardButton(ShiftType.night.GetDisplayShortName(), "2")), cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "День☀️ или ночь🌙?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton(ShiftType.day.GetDisplayShortName(), "1"), new InlineKeyboardButton(ShiftType.night.GetDisplayShortName(), "2")), cancellationToken: ct);
                         context.CurrentStep = "selectedStartTime";
                         return ScenarioResult.Transition;
                     case "selectedStartTime":
                         ((DayTemplate)context.Data["templateJson"]).Type = (ShiftType)Int32.Parse(context.Data["Callback"].ToString());
-                        await botClient.SendMessage(message.Chat, "Введите время начала смены в формате '05:25'", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Введите время🕔 начала смены в формате '05:25'", cancellationToken: ct);
                         context.CurrentStep = "selectedEndTime";
                         return ScenarioResult.Transition;
                     case "selectedEndTime":
                         TextIsValidate(1, message.Text.Trim());
                         ((DayTemplate)context.Data["templateJson"]).Start = TimeSpan.Parse(message.Text);
                         context.CurrentStep = "createTemplate";
-                        await botClient.SendMessage(message.Chat, "Введите время окончания смены в формате '05:25'", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Введите время🕔 окончания смены в формате '05:25'", cancellationToken: ct);
                         return ScenarioResult.Transition;
                     case "createTemplate":
                         TextIsValidate(1, message.Text);
@@ -88,12 +88,12 @@ namespace MyShift.Core.Scenarios
                     {
                         case null:
                             ((ScheduleTemplate)context.Data["template"]).CreatorBy = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id, ct);
-                            await botClient.SendMessage(message.Chat, "Введите название шаблона", cancellationToken: ct);
+                            await botClient.SendMessage(message.Chat, "Введите название шаблона✍️", cancellationToken: ct);
                             context.CurrentStep = "StartCycl";
                             return ScenarioResult.Transition;
                         case "StartCycl":
                             ((ScheduleTemplate)context.Data["template"]).Name = message.Text;
-                            await botClient.SendMessage(message.Chat, "Создать первую смену?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Да", "yes"), new InlineKeyboardButton("Нет", "no")), cancellationToken: ct);
+                            await botClient.SendMessage(message.Chat, "Создать первую смену❓", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Да✅", "yes"), new InlineKeyboardButton("Нет❌", "no")), cancellationToken: ct);
                             context.CurrentStep = "SelectDayPart";
                             return ScenarioResult.Transition;
                         case "SelectDayPart":
@@ -103,7 +103,7 @@ namespace MyShift.Core.Scenarios
                             }
                             if (!context.Data.ContainsKey("templateJson"))
                                 context.Data.Add("templateJson", new CycleTemplate());
-                            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите тип смены", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton(ShiftType.day.GetDisplayShortName(), "1"), new InlineKeyboardButton(ShiftType.night.GetDisplayShortName(), "2"), new InlineKeyboardButton(ShiftType.off.GetDisplayShortName(), "3")), cancellationToken: ct);
+                            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите тип смены🌓", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton(ShiftType.day.GetDisplayShortName()+ "☀️", "1"), new InlineKeyboardButton(ShiftType.night.GetDisplayShortName()+ "🌙", "2"), new InlineKeyboardButton(ShiftType.off.GetDisplayShortName()+ "🛌", "3")), cancellationToken: ct);
                             context.CurrentStep = "SelectedStartTime";
                             return ScenarioResult.Transition;
                         case "SelectedStartTime":
@@ -116,13 +116,13 @@ namespace MyShift.Core.Scenarios
                                 context.CurrentStep = "CreateNew";
                                 continue;
                             }
-                            await botClient.SendMessage(message.Chat, "Введите время начала смены в формате '05:25'", cancellationToken: ct);
+                            await botClient.SendMessage(message.Chat, "Введите время🕔 начала смены в формате '05:25'", cancellationToken: ct);
                             context.CurrentStep = "SelectedEndTime";
                             return ScenarioResult.Transition;
                         case "SelectedEndTime":
                             TextIsValidate(1, message.Text);
                             ((CycleTemplate)context.Data["templateJson"]).LastOrDefault().Start = TimeSpan.Parse(message.Text);
-                            await botClient.SendMessage(message.Chat, "Введите время окончания смены в формате '05:25'", cancellationToken: ct);
+                            await botClient.SendMessage(message.Chat, "Введите время🕔 окончания смены в формате '05:25'", cancellationToken: ct);
                             context.CurrentStep = "CreateNew";
                             return ScenarioResult.Transition;
                         case "CreateNew":
@@ -131,7 +131,7 @@ namespace MyShift.Core.Scenarios
                                 TextIsValidate(1, message.Text.Trim());
                                 ((CycleTemplate)context.Data["templateJson"]).LastOrDefault().End = TimeSpan.Parse(message.Text);
                             }
-                            await botClient.SendMessage(message.Chat, "Создать следующую смену?", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Да", "yes"), new InlineKeyboardButton("Нет", "no")), cancellationToken: ct);
+                            await botClient.SendMessage(message.Chat, "Создать следующую смену❓", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Да✅", "yes"), new InlineKeyboardButton("Нет❌", "no")), cancellationToken: ct);
                             context.CurrentStep = "SelectDayPart";
                             return ScenarioResult.Transition;
                     }
@@ -140,7 +140,7 @@ namespace MyShift.Core.Scenarios
             ScheduleTemplate scheduleTemplate = ((ScheduleTemplate)context.Data["template"]);
             if (!context.Data.ContainsKey("templateJson"))
             {
-                await botClient.SendMessage(message.Chat, "Шаблон не создан т.к. не добавленно ни одной смены.", cancellationToken: ct);
+                await botClient.SendMessage(message.Chat, "Шаблон не создан т.к. не добавленно ни одной смены.📅❌", cancellationToken: ct);
                 return ScenarioResult.Completed;
             }
             if (context.Data["typeTemplate"] != null && context.Data["typeTemplate"].ToString() == "0")
@@ -153,11 +153,11 @@ namespace MyShift.Core.Scenarios
             }
             else
             {
-                await botClient.SendMessage(message.Chat, "Шаблон не может быть пустым!", cancellationToken: ct);
+                await botClient.SendMessage(message.Chat, "Шаблон не может быть пустым⚠️", cancellationToken: ct);
                 return ScenarioResult.Completed;
             }
             await _scheduleRequestService.InsertScheduleTemplateAsync(scheduleTemplate, ct);
-            await botClient.SendMessage(message.Chat, "Шаблон успешно добавлен!", cancellationToken: ct);
+            await botClient.SendMessage(message.Chat, "Шаблон успешно добавлен!✅", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
         private void TextIsValidate(int check, string text)
@@ -168,13 +168,13 @@ namespace MyShift.Core.Scenarios
                     var numbers = text.Split(',');
                     if ((!Regex.IsMatch(text, @"(^\d{1}$)|(^(\d,)+\d{1}$)") || (text.Contains("8") || text.Contains("9") || text.Contains("0"))) || numbers.Length != numbers.Distinct().Count())
                     {
-                        throw new FormatException("Значение не должно быть пустым, не должно быть дублей и должно быть в формате: 1,3,5,6,7");
+                        throw new FormatException("Значение не должно быть пустым, не должно быть дублей и должно быть в формате: 1,3,5,6,7⚠️");
                     }
                     break;
                 case 1:
                     if (!Regex.IsMatch(text, @"^([01]\d|2[0-3]):[0-5]\d$"))
                     {
-                        throw new FormatException("Время должно быть в формате от 00:00 до 23:59");
+                        throw new FormatException("Время должно быть в формате от 00:00 до 23:59⚠️");
                     }
                     break;
             }

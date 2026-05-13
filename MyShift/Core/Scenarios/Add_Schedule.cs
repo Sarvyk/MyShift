@@ -34,7 +34,7 @@ namespace MyShift.Core.Scenarios
                     IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplatesAsync(ct);
                     if (templates.Count == 0)
                     {
-                        await botClient.SendMessage(message.Chat, "Действующие шаблоны не найдены!", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Действующие шаблоны не найдены!🔍❌", cancellationToken: ct);
                         return ScenarioResult.Completed;
                     }
                     var callbackData = new List<KeyValuePair<string, string>>();
@@ -44,7 +44,7 @@ namespace MyShift.Core.Scenarios
                     }
                     if (context.Data["Callback"].ToString() == "")
                     {
-                        await botClient.SendMessage(message.Chat, "Выберите шаблон", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showTemplate||0")), cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Выберите шаблон📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showTemplate||0")), cancellationToken: ct);
                         return ScenarioResult.Transition;
                     }
                     else if (context.Data["Callback"].ToString().Contains("showTemplate"))
@@ -68,12 +68,12 @@ namespace MyShift.Core.Scenarios
                     }
                     if (context.Data["Callback"] == "")
                     {
-                        await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUser||0")), cancellationToken: ct);
+                        await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUser||0")), cancellationToken: ct);
                         return ScenarioResult.Transition;
                     }
                     else if (context.Data["Callback"].ToString().Contains("showUser"))
                     {
-                        await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{context.Data["Callback"].ToString()}")), cancellationToken: ct);
+                        await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{context.Data["Callback"].ToString()}")), cancellationToken: ct);
                         return ScenarioResult.Transition;
                     }
                 }
@@ -83,14 +83,14 @@ namespace MyShift.Core.Scenarios
             int userId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
             if((await _scheduleRequestService.GetActiveScheduleByUserAsync(userId,ct)) != null)
             {
-                await botClient.SendMessage(context.Data["ChatId"].ToString(), "У этого пользователя уже есть активный график!", cancellationToken: ct);
+                await botClient.SendMessage(context.Data["ChatId"].ToString(), "У этого пользователя уже есть активный график!👤📅", cancellationToken: ct);
                 return ScenarioResult.Completed;
             }
             int assignedById = (await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id;
             ScheduleTemplate readyTemplate = (ScheduleTemplate)context.Data["Template"];
             UserSchedule userSchedule = new UserSchedule(userId, assignedById, readyTemplate.Id);
             await _scheduleRequestService.InsertScheduleAsync(userSchedule, readyTemplate, ct);
-            await botClient.SendMessage(context.Data["ChatId"].ToString(), "График для пользователя успешно составлен!", cancellationToken: ct);
+            await botClient.SendMessage(context.Data["ChatId"].ToString(), "График для пользователя успешно составлен!📅✅", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
     }

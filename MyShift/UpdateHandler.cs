@@ -137,7 +137,7 @@ namespace MyShift
                     }
                     break;
                 default:
-                    await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: cancellationToken);
+                    await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.⚠️", cancellationToken: cancellationToken);
                     await HelpCommand(botClient, update, cancellationToken);
                     break;
             }
@@ -182,7 +182,7 @@ namespace MyShift
                             {
                                 callbackData.Add(GetFormatAnswerRequest(request));
                             }
-                            await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
+                            await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите заявку📋, чтобы посмотреть🔍 её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
                         }
                     }
                     else if (a.Data.StartsWith("showShift"))
@@ -192,7 +192,7 @@ namespace MyShift
                             Shift shift = await _scheduleRequestService.GetShiftByIdAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
                             if (shift.ShiftType == ShiftType.off)
                             {
-                                await botClient.SendMessage(update.CallbackQuery.Message.Chat, $"На {shift.ShiftDate.ToString("d")} назначен выходной день.", cancellationToken: ct);
+                                await botClient.SendMessage(update.CallbackQuery.Message.Chat, $"На {shift.ShiftDate.ToString("d")} назначен выходной🛌 день.", cancellationToken: ct);
                                 return;
                             }
                             string answer = $"{shift.ShiftType.GetDisplayName()} на {shift.ShiftDate.ToString("D")}\r\nВремя с {shift.StartTime.Value.ToString(@"hh\:mm")} до {shift.EndTime.Value.ToString(@"hh\:mm")}{(shift.Status == true?"": "\r\nСтатус:отменена")}";
@@ -207,7 +207,7 @@ namespace MyShift
                             {
                                 callbackData.Add(GetFormatAnswerShift(shift));
                             }
-                            await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите смену", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
+                            await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Выберите смену🗓️", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, dto), cancellationToken: ct);
                         }
                     }
                     break;
@@ -230,17 +230,17 @@ namespace MyShift
             }
             if (callbackData.Count == 0)
             {
-                await botClient.SendMessage(update.Message.Chat, "Вы ещё не подавали заявки", cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, "Вы ещё не подавали заявки📄🚫", cancellationToken: ct);
                 return;
             }
-            await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showRequestPageNext||0")), cancellationToken: ct);
+            await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showRequestPageNext||0")), cancellationToken: ct);
         }
         private async Task GetSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
             UserSchedule userSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Id, ct);
             if (userSchedule == null)
             {
-                await botClient.SendMessage(update.Message.Chat, "У вас отсутствует график", cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, "У вас отсутствует график⚠️", cancellationToken: ct);
                 return;
             }
             var callbackData = new List<KeyValuePair<string, string>>();
@@ -248,7 +248,7 @@ namespace MyShift
             {
                 callbackData.Add(GetFormatAnswerShift(shift));
             }
-            await botClient.SendMessage(update.Message.Chat, "Выберите смену", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: ct);
+            await botClient.SendMessage(update.Message.Chat, "Выберите смену🗓️", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: ct);
         }
         private async Task EditSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
@@ -302,7 +302,7 @@ namespace MyShift
                     return scenario;
                 }
             }
-            throw new ArgumentException("Сценарий не найден");
+            throw new ArgumentException("Сценарий не найден⚠️");
         }
 
         private async Task StartCommand(ITelegramBotClient botClient,Update update, CancellationToken ct)
@@ -310,12 +310,12 @@ namespace MyShift
             ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
             if (toDoUser != null) 
             {
-                await botClient.SendMessage(update.Message.Chat,"Бот уже запущен!",cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, "Бот уже запущен!⚠️", cancellationToken: ct);
             }
             else
             {
                 toDoUser = await _userService.RegisterUserAsync(update.Message.Chat.Id, update.Message.From, ct);
-                await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот \"Мой график\"!", cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот👋🏻🤖 \"Мой график\"📋!", cancellationToken: ct);
             }
         }
         private async Task<bool> CheckCredentials(ITelegramBotClient botClient, Update update, User user, Role roles, CancellationToken ct)
@@ -329,13 +329,13 @@ namespace MyShift
                 }
                 else
                 {
-                    await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: ct);
+                    await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.⚠️", cancellationToken: ct);
                     return false;
                 }
             }
             else
             {
-                await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.", cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, $"Такой команды не существует.⚠️", cancellationToken: ct);
                 return false;
             }
         }
@@ -344,25 +344,36 @@ namespace MyShift
             ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
             if (toDoUser != null)
             {
-                if (toDoUser.Role == Role.Administrator)
+                if(toDoUser.Role == Role.SuperAdministrator)
+                {
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
-/create_template - процесс создания шаблона графиков;
-/create_schedule - процесс создания графика для пользователя;
-/edit_schedule - редактирование графиков
-/schedule - показывает текущий график;
-/add_request - создаёт заявку на смену расписания;
-/edit_role - смена ролей;
-/requests - выводит список заявок;", cancellationToken:ct);
+/create_template - процесс создания шаблона графиков;✍️
+/create_schedule - процесс создания графика для пользователя;✍️
+/edit_schedule - редактирование графиков;🔄
+/schedule - показывает текущий график;📋
+/add_request - создаёт заявку на смену расписания;✍️
+/edit_role - смена ролей;🔄
+/requests - выводит список заявок;📋", cancellationToken: ct);
+                }
+                else if (toDoUser.Role == Role.Administrator)
+                    await botClient.SendMessage(update.Message.Chat, @"Список команд:
+/create_template - процесс создания шаблона графиков;✍️
+/create_schedule - процесс создания графика для пользователя;✍️
+/edit_schedule - редактирование графиков;🔄
+/schedule - показывает текущий график;📋
+/add_request - создаёт заявку на смену расписания;✍️
+/edit_role - смена ролей;🔄
+/requests - выводит список заявок;📋", cancellationToken:ct);
                 else if (toDoUser.Role == Role.Moderator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
-/schedule - показывает текущий график;
-/add_request - создаёт заявку на смену расписания;
-/requests - выводит список заявок;", cancellationToken: ct);
+/schedule - показывает текущий график📋;
+/add_request - создаёт заявку на смену расписания; ✍️
+/requests - выводит список заявок;📋", cancellationToken: ct);
             }
             else
-                await botClient.SendMessage(update.Message.Chat, @"Вот список доступных комманд:/start, /help", cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, @"Вот список доступных комманд:/start▶️, /help🆘", cancellationToken: ct);
         }
     }
 }
