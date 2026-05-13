@@ -84,6 +84,7 @@ namespace MyShift.Core.Scenarios
                     Role roleResult = (Role)Int32.Parse(context.Data["Callback"].ToString());
                     await _userService.SetRole(userId, roleResult, ct);
                     await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userId}\" успешно изменена на\r\n\"{roleResult.GetDisplayName()}\"✅",  cancellationToken: ct);
+                    await MarkupManager.SetCommand(botClient, roleResult, message.Chat, ct);
                     break;
             }
             return ScenarioResult.Completed;

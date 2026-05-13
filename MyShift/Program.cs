@@ -1,11 +1,13 @@
 ﻿using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
 using MyShift.Core.Data;
+using MyShift.Core.Helpers;
 using MyShift.Core.Scenarios;
 using MyShift.Core.Scenarios.Interfaces;
 using MyShift.Core.Services;
 using MyShift.Repositories;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace MyShift
 {

@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MyShift.Core.Data;
+﻿using MyShift.Core.Data;
 using MyShift.Core.Enums;
 using MyShift.Core.Extensions;
 using MyShift.Core.Helpers;
@@ -10,11 +9,8 @@ using MyShift.Core.Scenarios.Enums;
 using MyShift.Core.Scenarios.Interfaces;
 using MyShift.DTO;
 using System.Collections;
-using System.Runtime.InteropServices;
-using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
-using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -317,6 +313,7 @@ namespace MyShift
                 toDoUser = await _userService.RegisterUserAsync(update.Message.Chat.Id, update.Message.From, ct);
                 await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот👋🏻🤖 \"Мой график\"📋!", cancellationToken: ct);
             }
+            await MarkupManager.SetCommand(botClient, toDoUser.Role, update.Message.Chat, ct);
         }
         private async Task<bool> CheckCredentials(ITelegramBotClient botClient, Update update, User user, Role roles, CancellationToken ct)
         {
@@ -347,6 +344,7 @@ namespace MyShift
                 if(toDoUser.Role == Role.SuperAdministrator)
                 {
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
+/help - показать помощь;
 /create_template - процесс создания шаблона графиков;✍️
 /create_schedule - процесс создания графика для пользователя;✍️
 /edit_schedule - редактирование графиков;🔄
@@ -357,6 +355,7 @@ namespace MyShift
                 }
                 else if (toDoUser.Role == Role.Administrator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
+/help - показать помощь;
 /create_template - процесс создания шаблона графиков;✍️
 /create_schedule - процесс создания графика для пользователя;✍️
 /edit_schedule - редактирование графиков;🔄
@@ -368,6 +367,7 @@ namespace MyShift
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
+/help - показать помощь;
 /schedule - показывает текущий график📋;
 /add_request - создаёт заявку на смену расписания; ✍️
 /requests - выводит список заявок;📋", cancellationToken: ct);
