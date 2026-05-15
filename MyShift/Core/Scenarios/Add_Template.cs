@@ -1,6 +1,7 @@
 ﻿using MyShift.Core.Entities;
 using MyShift.Core.Enums;
 using MyShift.Core.Extensions;
+using MyShift.Core.Helpers;
 using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using MyShift.Core.Scenarios.Enums;
@@ -26,9 +27,11 @@ namespace MyShift.Core.Scenarios
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
+            Role roleCurrentUser = (Role)Int32.Parse(context.Data["userRole"].ToString());
             if (!context.Data.ContainsKey("template"))
             {
                 context.Data.Add("template", new ScheduleTemplate());
+                await botClient.SendMessage(message.Chat, "Создаём шаблон", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                 await botClient.SendMessage(message.Chat, "Выберите тип графика🗓️", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Линейный➡️", "0"), new InlineKeyboardButton("Циклический🔁", "1")), cancellationToken: ct);
                 context.CurrentStep = "SetScheduleType";
                 return ScenarioResult.Transition;
@@ -140,7 +143,7 @@ namespace MyShift.Core.Scenarios
             ScheduleTemplate scheduleTemplate = ((ScheduleTemplate)context.Data["template"]);
             if (!context.Data.ContainsKey("templateJson"))
             {
-                await botClient.SendMessage(message.Chat, "Шаблон не создан т.к. не добавленно ни одной смены.📅❌", cancellationToken: ct);
+                await botClient.SendMessage(message.Chat, "Шаблон не создан т.к. не добавленно ни одной смены.📅❌", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                 return ScenarioResult.Completed;
             }
             if (context.Data["typeTemplate"] != null && context.Data["typeTemplate"].ToString() == "0")
@@ -153,11 +156,11 @@ namespace MyShift.Core.Scenarios
             }
             else
             {
-                await botClient.SendMessage(message.Chat, "Шаблон не может быть пустым⚠️", cancellationToken: ct);
+                await botClient.SendMessage(message.Chat, "Шаблон не может быть пустым⚠️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                 return ScenarioResult.Completed;
             }
             await _scheduleRequestService.InsertScheduleTemplateAsync(scheduleTemplate, ct);
-            await botClient.SendMessage(message.Chat, "Шаблон успешно добавлен!✅", cancellationToken: ct);
+            await botClient.SendMessage(message.Chat, "Шаблон успешно добавлен!✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
             return ScenarioResult.Completed;
         }
         private void TextIsValidate(int check, string text)

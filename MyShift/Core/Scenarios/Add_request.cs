@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Interfaces;
+﻿using MyShift.Core.Helpers;
+using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using MyShift.Core.Scenarios.Enums;
 using MyShift.Core.Scenarios.Interfaces;
@@ -28,14 +29,14 @@ namespace MyShift.Core.Scenarios
             switch (context.CurrentStep)
             {
                 case null:
-                    await botClient.SendMessage(message.Chat, "Опишите причину заявки✍️", cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, "Опишите причину заявки✍️", replyMarkup:MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     context.CurrentStep = "Reason";
                     context.Data.Add("User", await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(message.From.Id, ct)).Id, ct));
                     return ScenarioResult.Transition;
                 case "Reason":
                     ToDoUser user = (ToDoUser)context.Data["User"];
                     await _scheduleRequestService.InsertRequestAsync(user.Id, message.Text, ct);
-                    await botClient.SendMessage(message.Chat, $"{user.FirstName}, Заявка добавлена.✅ Ожидайте ответа", cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, $"{user.FirstName}, Заявка добавлена.✅ Ожидайте ответа", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
                     break;
             }
             return ScenarioResult.Completed;

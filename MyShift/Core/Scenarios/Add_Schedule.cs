@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Helpers;
+﻿using MyShift.Core.Enums;
+using MyShift.Core.Helpers;
 using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using MyShift.Core.Scenarios.Enums;
@@ -27,6 +28,7 @@ namespace MyShift.Core.Scenarios
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {//как-то мне не очень нравится этот вариант решения. Попозже возможно вернусь к этому кусочку
+            Role roleCurrentUser = (Role)Int32.Parse(context.Data["userRole"].ToString());
             if (!context.Data.ContainsKey("Template"))
             {
                 if (!context.Data["Callback"].ToString().Contains("selectedTemplate"))
@@ -42,6 +44,7 @@ namespace MyShift.Core.Scenarios
                     {
                         callbackData.Add(new KeyValuePair<string, string>(template.Name, ToDoItemCallbackDto.FromString($"selectedTemplate|{template.Id}").ToString()));
                     }
+                    await botClient.SendMessage(message.Chat, "Процесс создания графика", replyMarkup:MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     if (context.Data["Callback"].ToString() == "")
                     {
                         await botClient.SendMessage(message.Chat, "Выберите шаблон📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showTemplate||0")), cancellationToken: ct);
@@ -83,14 +86,14 @@ namespace MyShift.Core.Scenarios
             int userId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
             if((await _scheduleRequestService.GetActiveScheduleByUserAsync(userId,ct)) != null)
             {
-                await botClient.SendMessage(context.Data["ChatId"].ToString(), "У этого пользователя уже есть активный график!👤📅", cancellationToken: ct);
+                await botClient.SendMessage(context.Data["ChatId"].ToString(), "У этого пользователя уже есть активный график!👤📅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                 return ScenarioResult.Completed;
             }
             int assignedById = (await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id;
             ScheduleTemplate readyTemplate = (ScheduleTemplate)context.Data["Template"];
             UserSchedule userSchedule = new UserSchedule(userId, assignedById, readyTemplate.Id);
             await _scheduleRequestService.InsertScheduleAsync(userSchedule, readyTemplate, ct);
-            await botClient.SendMessage(context.Data["ChatId"].ToString(), "График для пользователя успешно составлен!📅✅", cancellationToken: ct);
+            await botClient.SendMessage(context.Data["ChatId"].ToString(), "График для пользователя успешно составлен!📅✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
             return ScenarioResult.Completed;
         }
     }

@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Helpers;
+﻿using MyShift.Core.Enums;
+using MyShift.Core.Helpers;
 using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using MyShift.Core.Scenarios.Enums;
@@ -29,6 +30,7 @@ namespace MyShift.Core.Scenarios
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
+            Role roleCurrentUser = (Role)Int32.Parse(context.Data["userRole"].ToString());
             var callbackData = new List<KeyValuePair<string,string>>();
             switch (context.CurrentStep)
             {
@@ -43,6 +45,7 @@ namespace MyShift.Core.Scenarios
                     {
                         callbackData.Add(new KeyValuePair<string, string>($"{userSchedule.User.Id}){userSchedule.User.FirstName} {userSchedule.User.LastName}", ToDoItemCallbackDto.FromString($"showUser|{userSchedule.User.Id}").ToString()));
                     }
+                    await botClient.SendMessage(message.Chat, "Процесс редактировани графика", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     await botClient.SendMessage(message.Chat, "Выберите пользователя.📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
                     context.CurrentStep = "selectUser";
                     return ScenarioResult.Transition;
@@ -112,20 +115,20 @@ namespace MyShift.Core.Scenarios
                 case "deleteShift":
                     if (context.Data["Callback"].ToString() == "no")
                     {
-                        await botClient.SendMessage(message.Chat, "Удаление отменено↩️", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Удаление отменено↩️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                         break;
                     }
                     await _scheduleRequestService.DeleteShiftByShiftIdAsync(Int32.Parse(context.Data["shiftId"].ToString()), ct);
-                    await botClient.SendMessage(message.Chat, "Выбранная смена удалёна✅", cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, "Выбранная смена удалёна✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                     break;
                 case "deleteUserSchedule":
                     if (context.Data["Callback"].ToString() == "no")
                     {
-                        await botClient.SendMessage(message.Chat, "Удаление отменено↩️", cancellationToken: ct);
+                        await botClient.SendMessage(message.Chat, "Удаление отменено↩️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                         break;
                     }
                     await _scheduleRequestService.DeleteScheduleByScheduleIdAsync(Int32.Parse(context.Data["scheduleId"].ToString()), ct);
-                    await botClient.SendMessage(message.Chat, "Выбранный график удалён✅", cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, "Выбранный график удалён✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                     break;
             }
             return ScenarioResult.Completed;

@@ -6,6 +6,7 @@ using MyShift.Core.Models;
 using MyShift.Core.Scenarios.Enums;
 using MyShift.Core.Scenarios.Interfaces;
 using MyShift.DTO;
+using System.Data;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -25,7 +26,8 @@ namespace MyShift.Core.Scenarios
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
-            switch(context.CurrentStep)
+            Role roleCurrentUser = (Role)Int32.Parse(context.Data["userRole"].ToString());
+            switch (context.CurrentStep)
             {
                 case null:
                     ToDoUser me = await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct);
@@ -44,6 +46,7 @@ namespace MyShift.Core.Scenarios
                     {
                         callbackData.Add(new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}({user.Role.GetDisplayName()})", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString()));
                     }
+                    await botClient.SendMessage(message.Chat, "Процесс смены роли", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     await botClient.SendMessage(message.Chat, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
                     context.CurrentStep = "selectUser";
                     return ScenarioResult.Transition;
@@ -83,8 +86,8 @@ namespace MyShift.Core.Scenarios
                     int userId = ToDoItemCallbackDto.FromString(context.Data["userId"].ToString()).ToDoItemId;
                     Role roleResult = (Role)Int32.Parse(context.Data["Callback"].ToString());
                     await _userService.SetRole(userId, roleResult, ct);
-                    await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userId}\" успешно изменена на\r\n\"{roleResult.GetDisplayName()}\"✅",  cancellationToken: ct);
-                    await MarkupManager.SetCommand(botClient, roleResult, message.Chat, ct);
+                    await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userId}\" успешно изменена на\r\n\"{roleResult.GetDisplayName()}\"✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+                    MarkupManager.SetCommand(botClient, roleResult, message.Chat, ct);
                     break;
             }
             return ScenarioResult.Completed;

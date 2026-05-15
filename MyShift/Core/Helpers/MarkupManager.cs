@@ -7,12 +7,12 @@ namespace MyShift.Core.Helpers
 {
     internal static class MarkupManager
     {
-        public static async Task SetCommand(ITelegramBotClient botClient, Role role, Chat chat, CancellationToken ct)
+        public static void SetCommand(ITelegramBotClient botClient, Role role, Chat chat, CancellationToken ct)
         {
             switch (role)
             {
                 case Role.User:
-                    await botClient.SetMyCommands(new List<BotCommand>()
+                    botClient.SetMyCommands(new List<BotCommand>()
                     {
                         new BotCommand("help","помощь"),
                         new BotCommand("schedule","показывает текущий график"),
@@ -24,7 +24,7 @@ namespace MyShift.Core.Helpers
                     },cancellationToken: ct);
                     break;
                 case Role.Moderator:
-                    await botClient.SetMyCommands(new List<BotCommand>()
+                    botClient.SetMyCommands(new List<BotCommand>()
                     {
                         
                     }, new BotCommandScopeChat()
@@ -33,7 +33,7 @@ namespace MyShift.Core.Helpers
                     }, cancellationToken: ct);
                     break;
                 case Role.Administrator:
-                    await botClient.SetMyCommands(new List<BotCommand>()
+                    botClient.SetMyCommands(new List<BotCommand>()
                     {
                         new BotCommand("help","Помощь"),
                         new BotCommand("create_template","процесс создания шаблона графиков"),
@@ -49,7 +49,7 @@ namespace MyShift.Core.Helpers
                     }, cancellationToken: ct);
                     break;
                 case Role.SuperAdministrator:
-                    await botClient.SetMyCommands(new List<BotCommand>()
+                    botClient.SetMyCommands(new List<BotCommand>()
                     {
                         new BotCommand("help","Помощь"),
                         new BotCommand("create_template","процесс создания шаблона графиков"),
@@ -65,6 +65,64 @@ namespace MyShift.Core.Helpers
                     }, cancellationToken: ct);
                     break;
             }
+        }
+        public static ReplyKeyboardMarkup SetStandartKeyboardButtonList(Role role)
+        {
+            ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+            switch (role)
+            {
+                case Role.User:
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/schedule📋"),
+                        new KeyboardButton("/add_request✍️"),
+                        new KeyboardButton("/requests📋")
+                    });
+                    return replyKeyboardMarkup;
+                case Role.Moderator:
+                    return replyKeyboardMarkup;
+                case Role.Administrator:
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/create_template"),
+                        new KeyboardButton("/create_schedule"),
+                        new KeyboardButton("/edit_schedule"),
+                        new KeyboardButton("/edit_role"),
+                    });
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/schedule"),
+                        new KeyboardButton("/add_request"),
+                        new KeyboardButton("/requests")
+                    });
+                    return replyKeyboardMarkup;
+                case Role.SuperAdministrator:
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/create_template"),
+                        new KeyboardButton("/create_schedule"),
+                        new KeyboardButton("/edit_schedule"),
+                        new KeyboardButton("/edit_role"),
+                    });
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/schedule"),
+                        new KeyboardButton("/add_request"),
+                        new KeyboardButton("/requests")
+                    });
+                    return replyKeyboardMarkup;
+                default:
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/start▶️"),
+                        new KeyboardButton("/help🆘")
+                    });
+                    return replyKeyboardMarkup;
+            }
+        }
+        public static ReplyKeyboardMarkup SetKeyboardCancel()
+        {
+            return new ReplyKeyboardMarkup(new KeyboardButton("/cancel"));
         }
     }
 }
