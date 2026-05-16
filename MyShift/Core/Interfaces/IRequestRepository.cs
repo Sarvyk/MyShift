@@ -11,6 +11,7 @@ namespace MyShift.Core.Interfaces
     {
         Task<Request> InsertRequestAsync(Request request, CancellationToken ct);
         Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct);
+        Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct);
         Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct);
         Task ApproveRequestAsync( CancellationToken ct);
         Task RejectRequestAsync( CancellationToken ct);

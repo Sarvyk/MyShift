@@ -157,5 +157,10 @@ namespace MyShift.Core.Services
         {
             await _scheduleRepository.DeleteShiftByShiftIdAsync(shiftId, ct);
         }
+
+        public async Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct)
+        {
+            return await _requestRepository.GetActiveRequestsAsync(ct);
+        }
     }
 }

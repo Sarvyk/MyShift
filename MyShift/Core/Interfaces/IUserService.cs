@@ -16,5 +16,6 @@ namespace MyShift.Core.Interfaces
         Task<ToDoUser?> RegisterUserAsync(long chatId,User userData, CancellationToken ct);
         Task<IReadOnlyList<ToDoUser>> GetAllUsers(CancellationToken ct);
         Task SetRole(int userId, Role role, CancellationToken ct);
+        Task<IReadOnlyList<ToDoUser>> GetStaff(CancellationToken ct);
     }
 }
