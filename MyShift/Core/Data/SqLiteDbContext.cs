@@ -1,6 +1,7 @@
 ﻿
 
 using Microsoft.EntityFrameworkCore;
+using MyShift.Core.Entities;
 using MyShift.Core.Models;
 
 namespace MyShift.Core.Data
@@ -13,7 +14,7 @@ namespace MyShift.Core.Data
         public DbSet<UserSchedule> UserSchedules { get; set; }
         public DbSet<ScheduleTemplate> Schedule_Templates { get; set; }
         public DbSet<Shift> Shifts { get; set; }
-        public DbSet<ScheduleTemplate_Schedule> ToDoUser_ScheduleTemplates { get; set; }
+        public DbSet<Notification> Notifications { get; set; } 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var projectPath = Directory.GetCurrentDirectory();

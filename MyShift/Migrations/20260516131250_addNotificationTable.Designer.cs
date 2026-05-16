@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyShift.Core.Data;
 
@@ -10,9 +11,11 @@ using MyShift.Core.Data;
 namespace MyShift.Migrations
 {
     [DbContext(typeof(SqLiteDbContext))]
-    partial class SqLiteDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260516131250_addNotificationTable")]
+    partial class addNotificationTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.23");
@@ -40,12 +43,12 @@ namespace MyShift.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("requestId")
+                    b.Property<int>("userId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("id");
 
-                    b.HasIndex("requestId");
+                    b.HasIndex("userId");
 
                     b.ToTable("Notifications");
                 });
@@ -223,13 +226,13 @@ namespace MyShift.Migrations
 
             modelBuilder.Entity("MyShift.Core.Entities.Notification", b =>
                 {
-                    b.HasOne("MyShift.Core.Models.Request", "request")
+                    b.HasOne("MyShift.Core.Models.ToDoUser", "user")
                         .WithMany()
-                        .HasForeignKey("requestId")
+                        .HasForeignKey("userId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("request");
+                    b.Navigation("user");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>

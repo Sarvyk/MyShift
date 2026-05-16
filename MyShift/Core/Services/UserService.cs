@@ -23,6 +23,11 @@ namespace MyShift.Core.Services
             return _userRepository.GetAllUsersAsync(ct);
         }
 
+        public async Task<IReadOnlyList<ToDoUser>> GetStaff(CancellationToken ct)
+        {
+            return await _userRepository.GetStaff(ct);
+        }
+
         public async Task<ToDoUser?> GetUserAsync(int id, CancellationToken ct)
         {
             return await _userRepository.GetUserByIdAsync(id,ct);

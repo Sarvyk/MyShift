@@ -14,6 +14,7 @@ namespace MyShift.Core.Models
         public string Message { get; set; }
         public RequestStatus Status { get; set; } // Enum: Pending, Approved, Rejected
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
         public string? ResolutionComment { get; set; } // Комментарий при обработке
 
         // Связь с создателем

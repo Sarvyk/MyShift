@@ -51,5 +51,10 @@ namespace MyShift.Repositories
         {
             throw new NotImplementedException();
         }
+
+        public async Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct)
+        {
+            return await _context.Requests.Where(req => req.Status == RequestStatus.Pending).ToListAsync();
+        }
     }
 }

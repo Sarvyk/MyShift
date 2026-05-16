@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyShift.BackgroundTasks;
 using MyShift.Core.Data;
+using MyShift.Core.Interfaces;
 using MyShift.Core.Scenarios;
 using MyShift.Core.Scenarios.Interfaces;
 using MyShift.Core.Services;
@@ -22,8 +23,13 @@ namespace MyShift
             {
                 db.Database.Migrate();
                 var botClient = new TelegramBotClient(_token);
-                UserService userService = new UserService(new UserRepository(db));
-                ScheduleRequestService scheduleRequestService = new ScheduleRequestService(new RequestRepository(db), new ScheduleRepository(db));
+                var userRepository = new UserRepository(db);
+                UserService userService = new UserService(userRepository);
+                var requestRepository = new RequestRepository(db);
+                var scheduleRepository = new ScheduleRepository(db);
+                var notificationRepository = new NotificationRepository(db);
+                ScheduleRequestService scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
+                NotificationService notificationService = new NotificationService(notificationRepository);
                 var scenarioContextRepository = new InMemoryScenarioContextRepository();
                 var scenarios = new List<IScenario>()
                 {
@@ -36,7 +42,9 @@ namespace MyShift
                 };
                 var cts = new CancellationTokenSource();
                 var backgroundRunner = new BackgroundTaskRunner();
-                backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromMinutes(10), scenarioContextRepository, botClient));
+                backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromMinutes(5), scenarioContextRepository, botClient));
+                backgroundRunner.AddTask(new TodayBackgroundTask(TimeSpan.FromMinutes(1), notificationService, requestRepository));
+                backgroundRunner.AddTask(new RequestsDeliveryBackgroundTask(TimeSpan.FromMinutes(1),botClient, userRepository, notificationService));
                 backgroundRunner.StartTasks(cts.Token);
                 var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, scenarioContextRepository);
                 botClient.StartReceiving(handle, cancellationToken:cts.Token);
