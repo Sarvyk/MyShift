@@ -100,7 +100,7 @@ namespace MyShift
                 case "/help":
                     await HelpCommand(botClient, update, ct);
                     break;
-                case string a when a.StartsWith("/add_request"):
+                case "/add_request":
                     if (await CheckCredentials(botClient, update, update.Message.From, all, ct))
                     {
                         context = new ScenarioContext(ScenarioType.Add_Request);
@@ -121,7 +121,7 @@ namespace MyShift
                     }
                     break;
                 case "/create_schedule":
-                    if (await CheckCredentials(botClient, update, update.Message.From, nonUser, ct))
+                    if (await CheckCredentials(botClient, update, update.Message.From, onlyAdministrator, ct))
                     {
                         await CreateSchedule(botClient, update, context, ct);
                     }
@@ -139,7 +139,7 @@ namespace MyShift
                     }
                     break;
                 case "/edit_role":
-                    if (await CheckCredentials(botClient, update, update.Message.From, nonUser, ct))
+                    if (await CheckCredentials(botClient, update, update.Message.From, onlyAdministrator, ct))
                     {
                         await EditRole(botClient, update, context, ct);
                     }
@@ -382,7 +382,12 @@ namespace MyShift
 /edit_role - смена ролей;🔄
 /requests - выводит список заявок;📋", cancellationToken:ct);
                 else if (toDoUser.Role == Role.Operator)
-                    await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
+                    await botClient.SendMessage(update.Message.Chat, @"Список команд:
+/help - показать помощь🆘;
+/schedule - показывает текущий график📋;
+/add_request - создаёт заявку на смену расписания; ✍️
+/requests - выводит список заявок;📋
+/edit_schedule - редактирование графиков;🔄", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:
 /help - показать помощь🆘;

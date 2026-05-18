@@ -26,7 +26,11 @@ namespace MyShift.Core.Helpers
                 case Role.Operator:
                     botClient.SetMyCommands(new List<BotCommand>()
                     {
-                        
+                        new BotCommand("help","Помощь"),
+                        new BotCommand("edit_schedule","редактирование графиков"),
+                        new BotCommand("schedule","показывает текущий график"),
+                        new BotCommand("add_request","создаёт заявку на смену расписания"),
+                        new BotCommand("requests","выводит список заявок")
                     }, new BotCommandScopeChat()
                     {
                         ChatId = chat
