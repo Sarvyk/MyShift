@@ -169,7 +169,7 @@ namespace MyShift
                     context = new ScenarioContext(ScenarioType.Registration);
                     context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
                     context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
-                    context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
+                    context.Data.Add("userId", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
