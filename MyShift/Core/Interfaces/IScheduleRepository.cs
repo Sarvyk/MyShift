@@ -17,11 +17,11 @@ namespace MyShift.Core.Interfaces
         Task<UserSchedule?> GetScheduleAsync(int scheduleId, CancellationToken ct);
         Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct);
         Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct);
-        Task<IReadOnlyList<Shift>> GetAllShiftsForTomorrow(CancellationToken ct);
+        Task<IReadOnlyList<Shift?>> GetAllShiftsForTomorrow(CancellationToken ct);
         Task<ScheduleTemplate?> GetScheduleTemplateAsync(int templateId, CancellationToken ct);
         Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct);
         Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct);
-        Task EditShiftScheduleAsync( CancellationToken ct);
+        Task<Shift?> EditShiftScheduleAsync(int shiftId, TimeSpan startTime, TimeSpan endTime, CancellationToken ct);
         Task DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct);
         Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct);
         Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct);

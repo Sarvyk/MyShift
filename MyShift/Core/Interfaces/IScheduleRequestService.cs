@@ -21,8 +21,9 @@ namespace MyShift.Core.Interfaces
         Task<UserSchedule?> GetScheduleAsync(int scheduleId,CancellationToken ct);
         Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct);
         Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct);
+        Task<Shift?> EditShiftScheduleAsync(int shiftId, TimeSpan startTime, TimeSpan endTime, CancellationToken ct);
         Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct);
-        Task DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct);
+        Task<UserSchedule?> DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct);
         Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct);
     }
 }

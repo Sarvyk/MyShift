@@ -142,15 +142,20 @@ namespace MyShift.Core.Services
         {
             return await _scheduleRepository.GetShiftByIdAsync(scheduleId, ct);
         }
+        public async Task<Shift?> EditShiftScheduleAsync(int shiftId, TimeSpan startTime, TimeSpan endTime, CancellationToken ct)
+        {
+            return await _scheduleRepository.EditShiftScheduleAsync(shiftId, startTime, endTime, ct);
+        }
 
         public async Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct)
         {
             return await _scheduleRepository.GetActiveSchedulesAsync(ct);
         }
 
-        public async Task DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct)
+        public async Task<UserSchedule?> DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct)
         {
             await _scheduleRepository.DeleteScheduleByScheduleIdAsync(scheduleId, ct);
+            return await _scheduleRepository.GetScheduleAsync(scheduleId, ct);
         }
 
         public async Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct)

@@ -47,9 +47,15 @@ namespace MyShift.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task EditShiftScheduleAsync(CancellationToken ct)
+        public async Task<Shift?> EditShiftScheduleAsync(int shiftId, TimeSpan startTime, TimeSpan endTime, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            Shift? shift = await _context.Shifts.FirstOrDefaultAsync(s => s.Id == shiftId);
+            if (shift == null)
+                return null;
+            shift.StartTime = startTime;
+            shift.EndTime = endTime;
+            await _context.SaveChangesAsync(ct);
+            return shift;
         }
 
         public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct)
@@ -59,7 +65,9 @@ namespace MyShift.Repositories
 
         public async Task<UserSchedule?> GetScheduleAsync(int id, CancellationToken ct)
         {
-            return await _context.UserSchedules.FirstOrDefaultAsync(schId => schId.Id == id, cancellationToken: ct);
+            return await _context.UserSchedules
+                .Include(sch => sch.User)
+                .FirstOrDefaultAsync(sch => sch.Id == id, cancellationToken: ct);
         }
 
         public async Task<ScheduleTemplate?> GetScheduleTemplateAsync(int id, CancellationToken ct)
@@ -80,7 +88,10 @@ namespace MyShift.Repositories
 
         public async Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct)
         {
-            return await _context.Shifts.FirstOrDefaultAsync(sch => sch.Id == scheduleId);
+            return await _context.Shifts
+                .Include(sch => sch.UserSchedule)
+                .ThenInclude(sch => sch.User)
+                .FirstOrDefaultAsync(sch => sch.Id == scheduleId);
         }
 
         public async Task<IReadOnlyList<Shift>> GetAllShiftsForTomorrow(CancellationToken ct)

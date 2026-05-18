@@ -57,7 +57,7 @@ namespace MyShift.Core.Scenarios
                         context.CurrentStep = "selectDayPart";
                         return ScenarioResult.Transition;
                     case "selectDayPart":
-                        TextIsValidate(0, message.Text);
+                        Validator.TextIsValidate(0, message.Text);
                         DayTemplate dayTemplate = new DayTemplate();
                         dayTemplate.Days = string.Join(',', message.Text.Split(',').Select(Int32.Parse).OrderBy(n => n));
                         context.Data["templateJson"] = dayTemplate;
@@ -70,13 +70,13 @@ namespace MyShift.Core.Scenarios
                         context.CurrentStep = "selectedEndTime";
                         return ScenarioResult.Transition;
                     case "selectedEndTime":
-                        TextIsValidate(1, message.Text.Trim());
+                        Validator.TextIsValidate(1, message.Text.Trim());
                         ((DayTemplate)context.Data["templateJson"]).Start = TimeSpan.Parse(message.Text);
                         context.CurrentStep = "createTemplate";
                         await botClient.SendMessage(message.Chat, "Введите время🕔 окончания смены в формате '05:25'", cancellationToken: ct);
                         return ScenarioResult.Transition;
                     case "createTemplate":
-                        TextIsValidate(1, message.Text);
+                        Validator.TextIsValidate(1, message.Text);
                         ((DayTemplate)context.Data["templateJson"]).End = TimeSpan.Parse(message.Text);
                         break;
                 }
@@ -123,7 +123,7 @@ namespace MyShift.Core.Scenarios
                             context.CurrentStep = "SelectedEndTime";
                             return ScenarioResult.Transition;
                         case "SelectedEndTime":
-                            TextIsValidate(1, message.Text);
+                            Validator.TextIsValidate(1, message.Text);
                             ((CycleTemplate)context.Data["templateJson"]).LastOrDefault().Start = TimeSpan.Parse(message.Text);
                             await botClient.SendMessage(message.Chat, "Введите время🕔 окончания смены в формате '05:25'", cancellationToken: ct);
                             context.CurrentStep = "CreateNew";
@@ -131,7 +131,7 @@ namespace MyShift.Core.Scenarios
                         case "CreateNew":
                             if (context.Data["Callback"].ToString() != "3")
                             {
-                                TextIsValidate(1, message.Text.Trim());
+                                Validator.TextIsValidate(1, message.Text.Trim());
                                 ((CycleTemplate)context.Data["templateJson"]).LastOrDefault().End = TimeSpan.Parse(message.Text);
                             }
                             await botClient.SendMessage(message.Chat, "Создать следующую смену❓", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("Да✅", "yes"), new InlineKeyboardButton("Нет❌", "no")), cancellationToken: ct);
@@ -162,25 +162,6 @@ namespace MyShift.Core.Scenarios
             await _scheduleRequestService.InsertScheduleTemplateAsync(scheduleTemplate, ct);
             await botClient.SendMessage(message.Chat, "Шаблон успешно добавлен!✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
             return ScenarioResult.Completed;
-        }
-        private void TextIsValidate(int check, string text)
-        {
-            switch (check)
-            {
-                case 0:
-                    var numbers = text.Split(',');
-                    if ((!Regex.IsMatch(text, @"(^\d{1}$)|(^(\d,)+\d{1}$)") || (text.Contains("8") || text.Contains("9") || text.Contains("0"))) || numbers.Length != numbers.Distinct().Count())
-                    {
-                        throw new FormatException("Значение не должно быть пустым, не должно быть дублей и должно быть в формате: 1,3,5,6,7⚠️");
-                    }
-                    break;
-                case 1:
-                    if (!Regex.IsMatch(text, @"^([01]\d|2[0-3]):[0-5]\d$"))
-                    {
-                        throw new FormatException("Время должно быть в формате от 00:00 до 23:59⚠️");
-                    }
-                    break;
-            }
         }
     }
 }
