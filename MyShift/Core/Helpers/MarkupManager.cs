@@ -23,7 +23,7 @@ namespace MyShift.Core.Helpers
                         ChatId = chat
                     },cancellationToken: ct);
                     break;
-                case Role.Moderator:
+                case Role.Operator:
                     botClient.SetMyCommands(new List<BotCommand>()
                     {
                         
@@ -79,7 +79,7 @@ namespace MyShift.Core.Helpers
                         new KeyboardButton("/requests📋")
                     });
                     return replyKeyboardMarkup;
-                case Role.Moderator:
+                case Role.Operator:
                     return replyKeyboardMarkup;
                 case Role.Administrator:
                     replyKeyboardMarkup.AddNewRow(new KeyboardButton[]

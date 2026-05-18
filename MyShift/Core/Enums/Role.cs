@@ -14,8 +14,8 @@ namespace MyShift.Core.Enums
         None = 0,
         [Display(Name = "👤Пользователь👤")]
         User = 1,
-        [Display(Name = "🛡️Модератор🛡️")]
-        Moderator = 1 << 1,
+        [Display(Name = "🛡️Оператор🛡️")]
+        Operator = 1 << 1,
         [Display(Name = "⭐Администратор⭐")]
         Administrator = 1 << 2,
         [Display(Name = "👑Супер администратор👑")]

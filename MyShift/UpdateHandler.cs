@@ -83,8 +83,8 @@ namespace MyShift
                 return;
             }
             context = await _scenarioContextRepository.GetContext(update.Message.From.Id, ct);
-            Role all = Role.User | Role.Moderator | Role.Administrator | Role.SuperAdministrator;
-            Role nonUser = Role.Moderator | Role.Administrator | Role.SuperAdministrator;
+            Role all = Role.User | Role.Operator | Role.Administrator | Role.SuperAdministrator;
+            Role nonUser = Role.Operator | Role.Administrator | Role.SuperAdministrator;
             Role onlyAdministrator = Role.Administrator | Role.SuperAdministrator;
             if (context != null)
             {
@@ -381,7 +381,7 @@ namespace MyShift
 /add_request - создаёт заявку на смену расписания;✍️
 /edit_role - смена ролей;🔄
 /requests - выводит список заявок;📋", cancellationToken:ct);
-                else if (toDoUser.Role == Role.Moderator)
+                else if (toDoUser.Role == Role.Operator)
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:заглушка", cancellationToken: ct);
                 else
                     await botClient.SendMessage(update.Message.Chat, @"Список команд:

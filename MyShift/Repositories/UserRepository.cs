@@ -49,7 +49,7 @@ namespace MyShift.Repositories
 
         public async Task<IReadOnlyList<ToDoUser>> GetStaff(CancellationToken ct)
         {
-            Role roles = Role.Moderator | Role.Administrator | Role.SuperAdministrator;
+            Role roles = Role.Operator | Role.Administrator | Role.SuperAdministrator;
             return await _context.Users.Where(user => (user.Role & roles) != 0).ToListAsync();
         }
     }
