@@ -10,7 +10,7 @@ namespace MyShift.Core.Entities
     public class Notification
     {
         public int id { get; set; }
-        public Request request { get; set; }
+        public ToDoUser user { get; set; }
         public string Type { get; set; }
         public string Text {  get; set; }
         public DateTime ScheduledAt { get; set; }

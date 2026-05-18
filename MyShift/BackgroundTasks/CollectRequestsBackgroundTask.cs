@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace MyShift.BackgroundTasks
 {
-    internal class TodayBackgroundTask : BackgroundTask
+    internal class CollectRequestsBackgroundTask : BackgroundTask
     {
         private readonly INotificationService _notificationService;
         private readonly IRequestRepository _requestRepository;
-        public TodayBackgroundTask(TimeSpan delay, INotificationService notificationService, IRequestRepository requestRepository) : base(delay, nameof(TodayBackgroundTask))
+        public CollectRequestsBackgroundTask(TimeSpan delay, INotificationService notificationService, IRequestRepository requestRepository) : base(delay, nameof(CollectRequestsBackgroundTask))
         {
             _notificationService = notificationService;
             _requestRepository = requestRepository;
@@ -22,7 +22,7 @@ namespace MyShift.BackgroundTasks
             var requests = await _requestRepository.GetActiveRequestsAsync(ct);
             foreach(var request in requests)
             {
-                await _notificationService.ScheduleNotification(request, $"Request_{DateOnly.FromDateTime(DateTime.UtcNow)}", request.Message, DateTime.UtcNow, ct);
+                await _notificationService.ScheduleNotification(request.CreatorId, $"Request_{request.Id}_{DateOnly.FromDateTime(DateTime.UtcNow)}", request.Message, DateTime.UtcNow, ct);
             }
         }
     }

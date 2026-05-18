@@ -28,9 +28,8 @@ namespace MyShift
                 UserService userService = new UserService(userRepository);
                 var requestRepository = new RequestRepository(db);
                 var scheduleRepository = new ScheduleRepository(db);
-                var notificationRepository = new NotificationRepository(db);
                 ScheduleRequestService scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
-                NotificationService notificationService = new NotificationService(notificationRepository);
+                NotificationService notificationService = new NotificationService(db);
                 var scenarioContextRepository = new InMemoryScenarioContextRepository();
                 var scenarios = new List<IScenario>()
                 {
@@ -44,7 +43,7 @@ namespace MyShift
                 var cts = new CancellationTokenSource();
                 var backgroundRunner = new BackgroundTaskRunner();
                 backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromMinutes(5), scenarioContextRepository, botClient));
-                backgroundRunner.AddTask(new TodayBackgroundTask(TimeSpan.FromMinutes(1), notificationService, requestRepository));
+                backgroundRunner.AddTask(new CollectRequestsBackgroundTask(TimeSpan.FromMinutes(1), notificationService, requestRepository));
                 backgroundRunner.AddTask(new RequestsDeliveryBackgroundTask(TimeSpan.FromMinutes(1),botClient, userRepository, notificationService));
                 backgroundRunner.StartTasks(cts.Token);
                 var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, scenarioContextRepository);

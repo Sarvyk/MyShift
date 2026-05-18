@@ -82,6 +82,12 @@ namespace MyShift.Repositories
             return await _context.Shifts.FirstOrDefaultAsync(sch => sch.Id == scheduleId);
         }
 
+        public async Task<IReadOnlyList<Shift>> GetAllShiftsForTomorrow(CancellationToken ct)
+        {
+            return await _context.Shifts
+                .Where(s => s.Status == true && s.ShiftDate.Date
+                .AddDays(-1) == DateTime.UtcNow.Date).ToListAsync();
+        }
         public async Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct)
         {
             return await _context.UserSchedules

@@ -40,14 +40,14 @@ namespace MyShift.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("requestId")
+                    b.Property<int>("userId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("id");
 
-                    b.HasIndex("requestId");
+                    b.HasIndex("userId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>
@@ -84,7 +84,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("ProcessorId");
 
-                    b.ToTable("Requests");
+                    b.ToTable("Requests", (string)null);
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.ScheduleTemplate", b =>
@@ -111,7 +111,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("CreatorId");
 
-                    b.ToTable("Schedule_Templates");
+                    b.ToTable("Schedule_Templates", (string)null);
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Shift", b =>
@@ -151,7 +151,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("UserScheduleId");
 
-                    b.ToTable("Shifts");
+                    b.ToTable("Shifts", (string)null);
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.ToDoUser", b =>
@@ -183,7 +183,7 @@ namespace MyShift.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.UserSchedule", b =>
@@ -218,18 +218,18 @@ namespace MyShift.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserSchedules");
+                    b.ToTable("UserSchedules", (string)null);
                 });
 
             modelBuilder.Entity("MyShift.Core.Entities.Notification", b =>
                 {
-                    b.HasOne("MyShift.Core.Models.Request", "request")
+                    b.HasOne("MyShift.Core.Models.ToDoUser", "user")
                         .WithMany()
-                        .HasForeignKey("requestId")
+                        .HasForeignKey("userId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("request");
+                    b.Navigation("user");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>

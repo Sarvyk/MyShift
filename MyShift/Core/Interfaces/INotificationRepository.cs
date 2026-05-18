@@ -12,6 +12,6 @@ namespace MyShift.Core.Interfaces
     {
         Task<IReadOnlyList<Notification>> GetScheduledNotifications(DateTime scheduledBefore, CancellationToken ct);
         Task MarkNotified(int notificationId, CancellationToken ct);
-        Task<bool> ScheduleNotification(Request request, string type, string text, DateTime scheduledAt, CancellationToken ct);
+        Task<bool> ScheduleNotification(int userId, string type, string text, DateTime scheduledAt, CancellationToken ct);
     }
 }
