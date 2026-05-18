@@ -8,12 +8,12 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace MyShift.BackgroundTasks
 {
-    internal class RequestsDeliveryBackgroundTask : BackgroundTask
+    internal class RequestScheduleBackgroundTask : BackgroundTask
     {
         private readonly ITelegramBotClient _botClient;
         private readonly IUserRepository _userRepository;
         private readonly INotificationService _notificationService;
-        public RequestsDeliveryBackgroundTask(TimeSpan delay, ITelegramBotClient botClient, IUserRepository userRepository, INotificationService notificationService) : base(delay, nameof(RequestsDeliveryBackgroundTask))
+        public RequestScheduleBackgroundTask(TimeSpan delay, ITelegramBotClient botClient, IUserRepository userRepository, INotificationService notificationService) : base(delay, nameof(RequestScheduleBackgroundTask))
         {
             _botClient = botClient;
             _userRepository = userRepository;
@@ -31,7 +31,6 @@ namespace MyShift.BackgroundTasks
                     int requestId = Int32.Parse(notification.Type.Split("_")[1]);
                     foreach (ToDoUser user in Staff)
                     {
-
                         await _botClient.SendMessage(user.TelegramId, $"Запрос от пользователя {notification.user.Id}){notification.user.FirstName} {notification.user.LastName}\r\nСообщение:{notification.Text}",
                             replyMarkup: new InlineKeyboardMarkup().AddButton("Обработать заявку", ToDoItemCallbackDto.FromString($"TakeRequest|{requestId}").ToString()),
                             cancellationToken: ct);

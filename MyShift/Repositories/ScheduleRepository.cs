@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MyShift.Core.Data;
+using MyShift.Core.Enums;
 using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using System;
@@ -85,8 +86,9 @@ namespace MyShift.Repositories
         public async Task<IReadOnlyList<Shift>> GetAllShiftsForTomorrow(CancellationToken ct)
         {
             return await _context.Shifts
-                .Where(s => s.Status == true && s.ShiftDate.Date
-                .AddDays(-1) == DateTime.UtcNow.Date).ToListAsync();
+                .Include(s => s.UserSchedule)
+                    .ThenInclude(s => s.User)
+                .Where(s => s.Status == true && s.ShiftDate.Date == DateTime.UtcNow.Date.AddDays(1) && s.ShiftType != ShiftType.off).ToListAsync();
         }
         public async Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct)
         {

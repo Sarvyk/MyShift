@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Interfaces;
+﻿using MyShift.Core.Extensions;
+using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,8 @@ namespace MyShift.BackgroundTasks
             var shifts = await _scheduleRepository.GetAllShiftsForTomorrow(ct);
             foreach(Shift shift in shifts)
             {
-                //await _notificationService.ScheduleNotification(shift, $"Request_{DateOnly.FromDateTime(DateTime.UtcNow)}", request.Message, DateTime.UtcNow, ct);
+                await _notificationService.ScheduleNotification(shift.UserSchedule.User.Id, $"Shift_{shift.Id}_{DateOnly.FromDateTime(DateTime.UtcNow)}", 
+                    $"У вас на завтра ({shift.ShiftDate.Date.ToString("D")}) назначена {shift.ShiftType.GetDisplayName()} с {shift.StartTime} до {shift.EndTime}", DateTime.UtcNow, ct);
             }
         }
     }

@@ -40,7 +40,7 @@ namespace MyShift
         public async Task<bool> ScheduleNotification(int userId, string type, string text, DateTime scheduledAt, CancellationToken ct)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if (await _context.Notifications.AnyAsync(n => n.user.Id == userId, ct))
+            if (await _context.Notifications.AnyAsync(n => n.user.Id == userId && n.Type == type, ct))
                 return false;
             Notification notification = new Notification()
             {

@@ -43,8 +43,10 @@ namespace MyShift
                 var cts = new CancellationTokenSource();
                 var backgroundRunner = new BackgroundTaskRunner();
                 backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromMinutes(5), scenarioContextRepository, botClient));
-                backgroundRunner.AddTask(new CollectRequestsBackgroundTask(TimeSpan.FromMinutes(1), notificationService, requestRepository));
-                backgroundRunner.AddTask(new RequestsDeliveryBackgroundTask(TimeSpan.FromMinutes(1),botClient, userRepository, notificationService));
+                backgroundRunner.AddTask(new CollectRequestsBackgroundTask(TimeSpan.FromMinutes(10), notificationService, requestRepository));
+                backgroundRunner.AddTask(new CollectingRemindersBackgroundTask(TimeSpan.FromMinutes(30), notificationService, scheduleRepository));
+                backgroundRunner.AddTask(new RequestScheduleBackgroundTask(TimeSpan.FromMinutes(10),botClient, userRepository, notificationService));
+                backgroundRunner.AddTask(new ReminderScheduleBackgroundTask(TimeSpan.FromMinutes(30), botClient, userRepository, notificationService));
                 backgroundRunner.StartTasks(cts.Token);
                 var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, scenarioContextRepository);
                 botClient.StartReceiving(handle, cancellationToken:cts.Token);
