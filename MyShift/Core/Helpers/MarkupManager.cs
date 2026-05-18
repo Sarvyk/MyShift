@@ -9,6 +9,14 @@ namespace MyShift.Core.Helpers
     {
         public static void SetCommand(ITelegramBotClient botClient, Role role, Chat chat, CancellationToken ct)
         {
+            SetCommandChat(botClient, role, chat.Id, ct);
+        }
+        public static void SetCommand(ITelegramBotClient botClient, Role role, long chat, CancellationToken ct)
+        {
+            SetCommandChat(botClient, role, chat, ct);
+        }
+        private static void SetCommandChat(ITelegramBotClient botClient, Role role, long chat, CancellationToken ct)
+        {
             switch (role)
             {
                 case Role.User:

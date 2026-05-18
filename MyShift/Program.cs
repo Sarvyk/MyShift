@@ -38,7 +38,8 @@ namespace MyShift
                     new Add_Template(userService, scheduleRequestService),
                     new Add_Schedule(userService, scheduleRequestService),
                     new Edit_Schedule(userService, scheduleRequestService),
-                    new EditRole(userService, scheduleRequestService)
+                    new EditRole(userService, scheduleRequestService),
+                    new Registration(userService)
                 };
                 var cts = new CancellationTokenSource();
                 var backgroundRunner = new BackgroundTaskRunner();

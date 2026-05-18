@@ -165,6 +165,14 @@ namespace MyShift
             }
             switch (update.CallbackQuery)
             {
+                case CallbackQuery a when a.Data.StartsWith("register|"):
+                    context = new ScenarioContext(ScenarioType.Registration);
+                    context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
+                    context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
+                    context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
+                    await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                    await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
+                    break;
                 case CallbackQuery a when a.Data.StartsWith("show"):
                     ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
                     if (a.Data.StartsWith("showRequest"))
@@ -328,7 +336,13 @@ namespace MyShift
             else
             {
                 toDoUser = await _userService.RegisterUserAsync(update.Message.Chat.Id, update.Message.From, ct);
-                await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот👋🏻🤖 \"Мой график\"📋!", cancellationToken: ct);
+                var staffs = await _userService.GetStaff(ct);
+                foreach(ToDoUser user in staffs)
+                {
+                    await botClient.SendMessage(user.TelegramId, "Новый пользователь зашёл в бот.", 
+                        replyMarkup:new InlineKeyboardMarkup().AddButton(new InlineKeyboardButton("Зарегистрировать", ToDoItemCallbackDto.FromString($"register|{toDoUser.Id}").ToString())), cancellationToken: ct);
+                }
+                await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот👋🏻🤖 \"Мой график\"📋! Заявка на регистрацию отправлена.", cancellationToken: ct);
             }
             MarkupManager.SetCommand(botClient, toDoUser.Role, update.Message.Chat, ct);
             MarkupManager.SetStandartKeyboardButtonList(toDoUser.Role);
