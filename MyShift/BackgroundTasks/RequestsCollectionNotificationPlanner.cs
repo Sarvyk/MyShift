@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace MyShift.BackgroundTasks
 {
-    internal class CollectRequestsBackgroundTask : BackgroundTask
+    internal class RequestsCollectionNotificationPlanner : BackgroundTask
     {
         private readonly INotificationService _notificationService;
         private readonly IRequestRepository _requestRepository;
-        public CollectRequestsBackgroundTask(TimeSpan delay, INotificationService notificationService, IRequestRepository requestRepository) : base(delay, nameof(CollectRequestsBackgroundTask))
+        public RequestsCollectionNotificationPlanner(TimeSpan delay, INotificationService notificationService, IRequestRepository requestRepository) : base(delay, nameof(RequestsCollectionNotificationPlanner))
         {
             _notificationService = notificationService;
             _requestRepository = requestRepository;

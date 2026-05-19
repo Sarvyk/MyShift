@@ -10,12 +10,12 @@ using Telegram.Bot.Requests.Abstractions;
 
 namespace MyShift.BackgroundTasks
 {
-    internal class CollectingRemindersBackgroundTask : BackgroundTask
+    internal class RemindersCollectionNotificationPlanner : BackgroundTask
     {
         private readonly INotificationService _notificationService;
         private readonly IScheduleRepository _scheduleRepository;
 
-        public CollectingRemindersBackgroundTask(TimeSpan delay, INotificationService notificationService, IScheduleRepository scheduleRepository) : base(delay, nameof(CollectingRemindersBackgroundTask))
+        public RemindersCollectionNotificationPlanner(TimeSpan delay, INotificationService notificationService, IScheduleRepository scheduleRepository) : base(delay, nameof(RemindersCollectionNotificationPlanner))
         {
             _notificationService = notificationService;
             _scheduleRepository = scheduleRepository;
