@@ -13,10 +13,10 @@ namespace MyShift.Repositories
 {
     internal class RequestRepository : IRequestRepository
     {
-        private readonly SqLiteDbContext _context;
-        public RequestRepository(SqLiteDbContext context)
+        private readonly IDbContextFactory<AppDbContext> _dbFactory;
+        public RequestRepository(IDbContextFactory<AppDbContext> dbFactory)
         {
-            _context = context;
+            _dbFactory = dbFactory;
         }
         public Task ApproveRequestAsync(CancellationToken ct)
         {
@@ -25,36 +25,42 @@ namespace MyShift.Repositories
 
         public async Task<Request> InsertRequestAsync(Request request, CancellationToken ct)
         {
-            await _context.Requests.AddAsync(request, ct);
-            await _context.SaveChangesAsync(ct);
+            using var context = _dbFactory.CreateDbContext();
+            await context.Requests.AddAsync(request, ct);
+            await context.SaveChangesAsync(ct);
             return request;
         }
 
         public async Task DeleteRequestAsync(int requestId, CancellationToken ct)
         {
-            Request? request = await _context.Requests.FindAsync(requestId);
+            using var context = _dbFactory.CreateDbContext();
+            Request? request = await context.Requests.FindAsync(requestId);
             request.Status = RequestStatus.Removed;
-            await _context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
         }
 
         public async Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct)
         {
-            return await _context.Requests.FirstOrDefaultAsync(req => req.CreatorId == userId && req.Id == requestId);
+            using var context = _dbFactory.CreateDbContext();
+            return await context.Requests.FirstOrDefaultAsync(req => req.CreatorId == userId && req.Id == requestId);
         }
 
         public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId , CancellationToken ct)
         {
-            return await _context.Requests.Where(req => req.CreatorId == userId && req.Status != RequestStatus.Removed).OrderByDescending(req => req.CreatedAt) .ToListAsync();
+            using var context = _dbFactory.CreateDbContext();
+            return await context.Requests.Where(req => req.CreatorId == userId && req.Status != RequestStatus.Removed).OrderByDescending(req => req.CreatedAt) .ToListAsync();
         }
 
         public Task RejectRequestAsync(CancellationToken ct)
         {
+            using var context = _dbFactory.CreateDbContext();
             throw new NotImplementedException();
         }
 
         public async Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct)
         {
-            return await _context.Requests.Where(req => req.Status == RequestStatus.Pending).ToListAsync();
+            using var context = _dbFactory.CreateDbContext();
+            return await context.Requests.Where(req => req.Status == RequestStatus.Pending).ToListAsync();
         }
     }
 }

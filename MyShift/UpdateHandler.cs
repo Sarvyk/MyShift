@@ -25,7 +25,6 @@ namespace MyShift
         private readonly IScenarioContextRepository _scenarioContextRepository;
         public UpdateHandler(IUserService userService, IScheduleRequestService scheduleRequestService, IEnumerable scenarios, IScenarioContextRepository scenarioContextRepository)
         {
-            var sqlContext = new SqLiteDbContext();
             _userService = userService;
             _scheduleRequestService = scheduleRequestService;
             _scenarios = scenarios;
@@ -230,6 +229,7 @@ namespace MyShift
                 case CallbackQuery a when a.Data.StartsWith("deleteRequest"):
                     context = new ScenarioContext(ScenarioType.Delete_Request);
                     context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data).ToString());
+                    context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Role);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;

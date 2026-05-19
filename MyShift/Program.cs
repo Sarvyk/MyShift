@@ -20,18 +20,18 @@ namespace MyShift
         {
             Env.Load();
             _token = Env.GetString("API_TOKEN");
-            using (var db = new SqLiteDbContext())
-            {
-                db.Database.Migrate();
-                var botClient = new TelegramBotClient(_token);
-                var userRepository = new UserRepository(db);
-                UserService userService = new UserService(userRepository);
-                var requestRepository = new RequestRepository(db);
-                var scheduleRepository = new ScheduleRepository(db);
-                ScheduleRequestService scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
-                NotificationService notificationService = new NotificationService(db);
-                var scenarioContextRepository = new InMemoryScenarioContextRepository();
-                var scenarios = new List<IScenario>()
+            var factory = new SqLiteDbContextFactory();
+            await using var context = factory.CreateDbContext();
+            context.Database.Migrate();
+            var botClient = new TelegramBotClient(_token);
+            var userRepository = new UserRepository(factory);
+            UserService userService = new UserService(userRepository);
+            var requestRepository = new RequestRepository(factory);
+            var scheduleRepository = new ScheduleRepository(factory);
+            ScheduleRequestService scheduleRequestService = new ScheduleRequestService(requestRepository, scheduleRepository);
+            NotificationService notificationService = new NotificationService(factory);
+            var scenarioContextRepository = new InMemoryScenarioContextRepository();
+            var scenarios = new List<IScenario>()
                 {
                     new Add_Request(userService, scheduleRequestService),
                     new Delete_Request(scheduleRequestService),
@@ -41,23 +41,22 @@ namespace MyShift
                     new EditRole(userService, scheduleRequestService),
                     new Registration(userService)
                 };
-                var cts = new CancellationTokenSource();
-                var backgroundRunner = new BackgroundTaskRunner();
-                backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromMinutes(5), scenarioContextRepository, botClient));
-                backgroundRunner.AddTask(new RequestsCollectionNotificationPlanner(TimeSpan.FromMinutes(10), notificationService, requestRepository));
-                backgroundRunner.AddTask(new RemindersCollectionNotificationPlanner(TimeSpan.FromMinutes(30), notificationService, scheduleRepository));
-                backgroundRunner.AddTask(new RequestScheduleBackgroundTask(TimeSpan.FromMinutes(10),botClient, userRepository, notificationService));
-                backgroundRunner.AddTask(new ReminderScheduleBackgroundTask(TimeSpan.FromMinutes(30), botClient, userRepository, notificationService));
-                backgroundRunner.AddTask(new ShiftExtensionNotificationPlanner(TimeSpan.FromSeconds(5), scheduleRepository, notificationService));
-                backgroundRunner.AddTask(new AdditionalGenerationSchedule(TimeSpan.FromSeconds(10), botClient, scheduleRequestService, notificationService));
-                backgroundRunner.StartTasks(cts.Token);
-                var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, scenarioContextRepository);
-                botClient.StartReceiving(handle, cancellationToken:cts.Token);
-                var botInfo = await botClient.GetMe();
-                Console.WriteLine($"-------------Бот \"{botInfo.FirstName}\" работает.-------------");
-                await KeyCheck(botInfo, backgroundRunner, cts);
-                await Task.Delay(-1);
-            }
+            var cts = new CancellationTokenSource();
+            var backgroundRunner = new BackgroundTaskRunner();
+            backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromMinutes(5), scenarioContextRepository, botClient));
+            backgroundRunner.AddTask(new RequestsCollectionNotificationPlanner(TimeSpan.FromMinutes(10), notificationService, requestRepository));
+            backgroundRunner.AddTask(new RemindersCollectionNotificationPlanner(TimeSpan.FromMinutes(30), notificationService, scheduleRepository));
+            backgroundRunner.AddTask(new RequestScheduleBackgroundTask(TimeSpan.FromMinutes(10), botClient, userRepository, notificationService));
+            backgroundRunner.AddTask(new ReminderScheduleBackgroundTask(TimeSpan.FromMinutes(30), botClient, userRepository, notificationService));
+            backgroundRunner.AddTask(new ShiftExtensionNotificationPlanner(TimeSpan.FromDays(1), scheduleRepository, notificationService));
+            backgroundRunner.AddTask(new AdditionalGenerationSchedule(TimeSpan.FromHours(12), botClient, scheduleRequestService, notificationService));
+            backgroundRunner.StartTasks(cts.Token);
+            var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, scenarioContextRepository);
+            botClient.StartReceiving(handle, cancellationToken: cts.Token);
+            var botInfo = await botClient.GetMe();
+            Console.WriteLine($"-------------Бот \"{botInfo.FirstName}\" работает.-------------");
+            await KeyCheck(botInfo, backgroundRunner, cts);
+            await Task.Delay(-1);
         }
         private static async Task KeyCheck(User bot, BackgroundTaskRunner backgroundRunner, CancellationTokenSource cts)
         {

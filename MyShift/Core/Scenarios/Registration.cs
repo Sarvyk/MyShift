@@ -54,7 +54,7 @@ namespace MyShift.Core.Scenarios
                     Role role = (Role)Int32.Parse(context.Data["Callback"].ToString());
                     await _userService.SetRole(Int32.Parse(context.Data["userId"].ToString()), role, ct);
                     await botClient.SendMessage(message.Chat, $"Пользователелю выдана роль \"{role.GetDisplayName()}\" успешно добавлен.", cancellationToken: ct);
-                    await botClient.SendMessage(Int32.Parse(context.Data["userId"].ToString()), $"Ваша регистрация завершена. Вам выдана роль \"{role.GetDisplayName()}\"", replyMarkup:MarkupManager.SetStandartKeyboardButtonList(role), cancellationToken: ct);
+                    await botClient.SendMessage(Int32.Parse(context.Data["TelegramUserId"].ToString()), $"Ваша регистрация завершена. Вам выдана роль \"{role.GetDisplayName()}\"", replyMarkup:MarkupManager.SetStandartKeyboardButtonList(role), cancellationToken: ct);
                     MarkupManager.SetCommand(botClient, role, long.Parse(context.Data["userId"].ToString()), ct);
                     break;
             }

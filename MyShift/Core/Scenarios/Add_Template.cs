@@ -47,7 +47,7 @@ namespace MyShift.Core.Scenarios
                 switch (context.CurrentStep)
                 {
                     case null:
-                        ((ScheduleTemplate)context.Data["template"]).CreatorBy = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id, ct);
+                        ((ScheduleTemplate)context.Data["template"]).CreatorId = (await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id;
                         await botClient.SendMessage(message.Chat, "Введите название шаблона✍️", cancellationToken: ct);
                         context.CurrentStep = "selectDayWeek";
                         return ScenarioResult.Transition;
@@ -90,7 +90,7 @@ namespace MyShift.Core.Scenarios
                     switch (context.CurrentStep)
                     {
                         case null:
-                            ((ScheduleTemplate)context.Data["template"]).CreatorBy = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id, ct);
+                            ((ScheduleTemplate)context.Data["template"]).CreatorId = (await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id;
                             await botClient.SendMessage(message.Chat, "Введите название шаблона✍️", cancellationToken: ct);
                             context.CurrentStep = "StartCycl";
                             return ScenarioResult.Transition;

@@ -14,14 +14,15 @@ namespace MyShift
 {
     internal class NotificationService : INotificationService
     {
-        private readonly SqLiteDbContext _context;
-        public NotificationService(SqLiteDbContext context)
+        private readonly IDbContextFactory<AppDbContext> _dbFactory;
+        public NotificationService(IDbContextFactory<AppDbContext> dbFactory)
         {
-            _context = context;
+            _dbFactory = dbFactory;
         }
         public async Task<IReadOnlyList<Notification>> GetScheduledNotification(DateTime scheduledBefore, CancellationToken ct)
         {
-            return await _context.Notifications
+            using var context = _dbFactory.CreateDbContext();
+            return await context.Notifications
                 .Include(n => n.user)
                 .Where(n => !n.IsNotified && n.ScheduledAt <= scheduledBefore)
                 .ToListAsync(ct);
@@ -29,18 +30,20 @@ namespace MyShift
 
         public async Task MarkNotified(int notificationId, CancellationToken ct)
         {
-            var notification = await _context.Notifications.FirstOrDefaultAsync(n => n.id == notificationId, ct);
+            using var context = _dbFactory.CreateDbContext();
+            var notification = await context.Notifications.FirstOrDefaultAsync(n => n.id == notificationId, ct);
             if (notification == null)
                 throw new Exception("Такого уведомления не существует");
             notification.IsNotified = true;
             notification.NotifiedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
 
         public async Task<bool> ScheduleNotification(int userId, string type, string text, DateTime scheduledAt, CancellationToken ct)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if (await _context.Notifications.AnyAsync(n => n.user.Id == userId && n.Type == type, ct))
+            using var context = _dbFactory.CreateDbContext();
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (await context.Notifications.AnyAsync(n => n.user.Id == userId && n.Type == type, ct))
                 return false;
             Notification notification = new Notification()
             {
@@ -49,8 +52,8 @@ namespace MyShift
                 Text = text,
                 ScheduledAt = scheduledAt
             };
-            await _context.AddAsync(notification);
-            await _context.SaveChangesAsync(ct);
+            await context.AddAsync(notification);
+            await context.SaveChangesAsync(ct);
             return true;
         }
     }

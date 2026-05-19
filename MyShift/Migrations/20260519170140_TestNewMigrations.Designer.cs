@@ -11,14 +11,47 @@ using MyShift.Core.Data;
 namespace MyShift.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260515163918_NewUpdateAt")]
-    partial class NewUpdateAt
+    [Migration("20260519170140_TestNewMigrations")]
+    partial class TestNewMigrations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.23");
+
+            modelBuilder.Entity("MyShift.Core.Entities.Notification", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsNotified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("NotifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ScheduledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("userId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("userId");
+
+                    b.ToTable("Notifications");
+                });
 
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>
                 {
@@ -82,30 +115,6 @@ namespace MyShift.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("Schedule_Templates");
-                });
-
-            modelBuilder.Entity("MyShift.Core.Models.ScheduleTemplate_Schedule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FirstScheduleId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Is_Cancelled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ScheduleTemplateId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FirstScheduleId");
-
-                    b.HasIndex("ScheduleTemplateId");
-
-                    b.ToTable("ToDoUser_ScheduleTemplates");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Shift", b =>
@@ -215,6 +224,17 @@ namespace MyShift.Migrations
                     b.ToTable("UserSchedules");
                 });
 
+            modelBuilder.Entity("MyShift.Core.Entities.Notification", b =>
+                {
+                    b.HasOne("MyShift.Core.Models.ToDoUser", "user")
+                        .WithMany()
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
+                });
+
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>
                 {
                     b.HasOne("MyShift.Core.Models.ToDoUser", "Creator")
@@ -241,25 +261,6 @@ namespace MyShift.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatorBy");
-                });
-
-            modelBuilder.Entity("MyShift.Core.Models.ScheduleTemplate_Schedule", b =>
-                {
-                    b.HasOne("MyShift.Core.Models.UserSchedule", "FirstSchedule")
-                        .WithMany()
-                        .HasForeignKey("FirstScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MyShift.Core.Models.ScheduleTemplate", "Schedule_Template")
-                        .WithMany()
-                        .HasForeignKey("ScheduleTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("FirstSchedule");
-
-                    b.Navigation("Schedule_Template");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Shift", b =>

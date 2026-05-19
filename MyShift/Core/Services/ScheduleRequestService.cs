@@ -28,7 +28,7 @@ namespace MyShift.Core.Services
             {
                 DayTemplate dayTemplate = JsonSerializer.Deserialize<DayTemplate>(template.RulesJson);
                 string firstDay = ((Weekday)Int32.Parse(dayTemplate.Days.Split(',')[0])).GetDisplayShortName().ToLower();
-                DateTime firstWorkDay = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1);
+                DateTime firstWorkDay = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day).AddDays(1);
                 while (firstWorkDay.ToString("ddd") != firstDay)
                 {//делаем расчёт даты начала действия графика
                     firstWorkDay = firstWorkDay.AddDays(1);
@@ -41,7 +41,7 @@ namespace MyShift.Core.Services
             }
             else if (template.Type == 1)
             {
-                schedule.StartDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1);
+                schedule.StartDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day).AddDays(1);
                 schedule.EndDate = schedule.StartDate.AddMonths(template.SchedulePeriod);
                 await _scheduleRepository.InsertScheduleAsync(schedule, ct);
                 await GenerationCycleShifts(schedule, template.RulesJson, schedule.StartDate, schedule.EndDate, ct);

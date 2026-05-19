@@ -30,8 +30,8 @@ namespace MyShift.Core.Models
             EndTime = end;
             ShiftType = shiftType;
             Status = status;
-            CreatedAt = DateTime.Now;
-            UpdatedAt = DateTime.Now;
+            CreatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
     }
 }

@@ -181,7 +181,7 @@ namespace MyShift.Core.Scenarios
                     TimeSpan end = TimeSpan.Parse(message.Text);
                     Shift editedShiftTime = await _scheduleRequestService.EditShiftScheduleAsync(shiftId, start, end, ct);
                     await botClient.SendMessage(message.Chat, $"Время смены пользователя успешно изменено!", cancellationToken: ct);
-                    await botClient.SendMessage(editedShiftTime.UserSchedule.User.TelegramId,$"Время смены на \"{editedShiftTime.ShiftDate.ToShortTimeString()}\" изменено на \"{editedShiftTime.StartTime.Value.ToString("hh\\:mm")}-{editedShiftTime.EndTime.Value.ToString("hh\\:mm")}\"",cancellationToken: ct);
+                    await botClient.SendMessage(editedShiftTime.UserSchedule.User.TelegramId,$"Время смены на \"{editedShiftTime.ShiftDate.ToShortDateString()}\" изменено на \"{editedShiftTime.StartTime.Value.ToString("hh\\:mm")}-{editedShiftTime.EndTime.Value.ToString("hh\\:mm")}\"",cancellationToken: ct);
                     break;
                 case "deleteShift":
                     if (context.Data["Callback"].ToString() == "no")

@@ -13,44 +13,50 @@ namespace MyShift.Repositories
 {
     internal class UserRepository : IUserRepository
     {
-        private readonly SqLiteDbContext _context;
-        public UserRepository(SqLiteDbContext context)
+        private readonly IDbContextFactory<AppDbContext> _dbFactory;
+        public UserRepository(IDbContextFactory<AppDbContext> dbFactory)
         {
-            _context = context;
+            _dbFactory = dbFactory;
         }
         public async Task<ToDoUser> RegisterUserAsync(ToDoUser user, CancellationToken ct)
         {
-            await _context.Users.AddAsync(user, ct);
-            await _context.SaveChangesAsync(ct);
+            await using var context = _dbFactory.CreateDbContext();
+            await context.Users.AddAsync(user, ct);
+            await context.SaveChangesAsync(ct);
             return user;
         }
 
         public async Task<ToDoUser?> GetUserByIdAsync(int id, CancellationToken ct)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
+            await using var context = _dbFactory.CreateDbContext();
+            return await context.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
         }
 
         public async Task<ToDoUser?> GetUserByTelegramIdAsync(long telegramId, CancellationToken ct)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId,ct);
+            await using var context = _dbFactory.CreateDbContext();
+            return await context.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId,ct);
         }
 
         public async Task<IReadOnlyList<ToDoUser>> GetAllUsersAsync(CancellationToken ct)
         {
-            return await _context.Users.ToListAsync(cancellationToken:ct);
+            await using var context = _dbFactory.CreateDbContext();
+            return await context.Users.ToListAsync(cancellationToken:ct);
         }
 
         public async Task SetRole(int userId, Role role, CancellationToken ct)
         {
-            ToDoUser user = await _context.Users.FirstOrDefaultAsync(user => user.Id == userId);
+            await using var context = _dbFactory.CreateDbContext();
+            ToDoUser user = await context.Users.FirstOrDefaultAsync(user => user.Id == userId);
             user.Role = role;
-            await _context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
         }
 
         public async Task<IReadOnlyList<ToDoUser>> GetStaff(CancellationToken ct)
         {
+            await using var context = _dbFactory.CreateDbContext();
             Role roles = Role.Operator | Role.Administrator | Role.SuperAdministrator;
-            return await _context.Users.Where(user => (user.Role & roles) != 0).ToListAsync();
+            return await context.Users.Where(user => (user.Role & roles) != 0).ToListAsync();
         }
     }
 }

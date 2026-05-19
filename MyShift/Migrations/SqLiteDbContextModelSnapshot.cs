@@ -9,7 +9,7 @@ using MyShift.Core.Data;
 
 namespace MyShift.Migrations
 {
-    [DbContext(typeof(SqLiteDbContext))]
+    [DbContext(typeof(AppDbContext))]
     partial class SqLiteDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -47,7 +47,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("userId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Request", b =>
@@ -84,7 +84,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("ProcessorId");
 
-                    b.ToTable("Requests", (string)null);
+                    b.ToTable("Requests");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.ScheduleTemplate", b =>
@@ -111,7 +111,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("CreatorId");
 
-                    b.ToTable("Schedule_Templates", (string)null);
+                    b.ToTable("Schedule_Templates");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.Shift", b =>
@@ -151,7 +151,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("UserScheduleId");
 
-                    b.ToTable("Shifts", (string)null);
+                    b.ToTable("Shifts");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.ToDoUser", b =>
@@ -183,7 +183,7 @@ namespace MyShift.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("MyShift.Core.Models.UserSchedule", b =>
@@ -218,7 +218,7 @@ namespace MyShift.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserSchedules", (string)null);
+                    b.ToTable("UserSchedules");
                 });
 
             modelBuilder.Entity("MyShift.Core.Entities.Notification", b =>

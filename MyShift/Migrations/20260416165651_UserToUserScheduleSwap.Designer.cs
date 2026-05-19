@@ -10,7 +10,7 @@ using MyShift.Core.Data;
 
 namespace MyShift.Migrations
 {
-    [DbContext(typeof(SqLiteDbContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20260416165651_UserToUserScheduleSwap")]
     partial class UserToUserScheduleSwap
     {
