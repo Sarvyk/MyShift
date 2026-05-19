@@ -32,7 +32,9 @@ namespace MyShift.BackgroundTasks
                     foreach (ToDoUser user in Staff)
                     {
                         await _botClient.SendMessage(user.TelegramId, $"Запрос от пользователя {notification.user.Id}){notification.user.FirstName} {notification.user.LastName}\r\nСообщение:{notification.Text}",
-                            replyMarkup: new InlineKeyboardMarkup().AddButton("Обработать заявку", ToDoItemCallbackDto.FromString($"TakeRequest|{requestId}").ToString()),
+                            replyMarkup: new InlineKeyboardMarkup()
+                            .AddButton("Обработать заявку", ToDoItemCallbackDto.FromString($"TakeRequest|{requestId}").ToString())
+                            .AddButton("Отказать", ToDoItemCallbackDto.FromString($"CancelRequest|{requestId}").ToString()),
                             cancellationToken: ct);
                         await _notificationService.MarkNotified(notification.id, ct);
                     }

@@ -164,6 +164,37 @@ namespace MyShift
             }
             switch (update.CallbackQuery)
             {
+                case CallbackQuery a when a.Data.StartsWith("TakeRequest|"):
+                    if((await _scheduleRequestService.GetRequestAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct)).ProcessorId != null)
+                    {
+                        await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Заявка уже обработана.", cancellationToken: ct);
+                        break;
+                    }
+                    await _scheduleRequestService.SetProcessor(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
+                    Request requestProcessing = await _scheduleRequestService.GetRequestAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
+                    context = new ScenarioContext(ScenarioType.Edit_Schedule);
+                    context.Data.Add("Callback", $"showUser|{requestProcessing.CreatorId}");
+                    context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Role);
+                    // Введём этот элемент, чтобы внутри сценария понимать, что этот сценарий от запроса идёт.
+                    context.Data.Add("TakeRequest", ToDoItemCallbackDto.FromString(a.Data).ToDoItemId);
+                    context.CurrentStep = "selectUser";
+                    await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                    await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
+                    break;
+                case CallbackQuery a when a.Data.StartsWith("CancelRequest|"):
+                    if ((await _scheduleRequestService.GetRequestAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct)).ProcessorId != null)
+                    {
+                        await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Заявка уже обработана.", cancellationToken: ct);
+                        break;
+                    }
+                    await _scheduleRequestService.SetProcessor(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
+                    context = new ScenarioContext(ScenarioType.Cancel_Request);
+                    context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
+                    context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
+                    context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
+                    await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
+                    await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
+                    break;
                 case CallbackQuery a when a.Data.StartsWith("register|"):
                     context = new ScenarioContext(ScenarioType.Registration);
                     context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
@@ -178,7 +209,7 @@ namespace MyShift
                     {
                         if (a.Data.StartsWith("showRequest|"))
                         {
-                            Request request = await _scheduleRequestService.GetRequestAsync(user.Id, ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
+                            Request request = await _scheduleRequestService.GetRequestAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
                             InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
                             string answer = $"Сообщение:{request.Message}\r\nСтатус:{request.Status.GetDisplayName()}{(request.Processor == null ? "" : $"\r\nЗаявку обработал{request.Processor.FirstName}{(request.ResolutionComment == null ? "" : $"Комментарий к заявке:{request.ResolutionComment}")}")}\r\nДата создания заявки:{request.CreatedAt}";
                             keyboardMarkup.AddNewRow(new InlineKeyboardButton[]

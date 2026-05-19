@@ -12,6 +12,7 @@ namespace MyShift.Core.Scenarios.Enums
         Registration,
         Add_Request,
         Delete_Request,
+        Cancel_Request,
         Add_Template,
         Add_Schedule,
         Edit_Schedule,

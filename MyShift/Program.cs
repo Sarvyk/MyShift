@@ -39,14 +39,15 @@ namespace MyShift
                     new Add_Schedule(userService, scheduleRequestService),
                     new Edit_Schedule(userService, scheduleRequestService),
                     new EditRole(userService, scheduleRequestService),
-                    new Registration(userService)
+                    new Registration(userService),
+                    new Cancel_Request(userService,scheduleRequestService)
                 };
             var cts = new CancellationTokenSource();
             var backgroundRunner = new BackgroundTaskRunner();
             backgroundRunner.AddTask(new ResetScenarioBackgroundTask(TimeSpan.FromMinutes(5), scenarioContextRepository, botClient));
-            backgroundRunner.AddTask(new RequestsCollectionNotificationPlanner(TimeSpan.FromMinutes(10), notificationService, requestRepository));
+            backgroundRunner.AddTask(new RequestsCollectionNotificationPlanner(TimeSpan.FromSeconds(5)/*FromMinutes(10)*/, notificationService, requestRepository));
             backgroundRunner.AddTask(new RemindersCollectionNotificationPlanner(TimeSpan.FromMinutes(30), notificationService, scheduleRepository));
-            backgroundRunner.AddTask(new RequestScheduleBackgroundTask(TimeSpan.FromMinutes(10), botClient, userRepository, notificationService));
+            backgroundRunner.AddTask(new RequestScheduleBackgroundTask(TimeSpan.FromSeconds(6)/*FromMinutes(10)*/, botClient, userRepository, notificationService));
             backgroundRunner.AddTask(new ReminderScheduleBackgroundTask(TimeSpan.FromMinutes(30), botClient, userRepository, notificationService));
             backgroundRunner.AddTask(new ShiftExtensionNotificationPlanner(TimeSpan.FromDays(1), scheduleRepository, notificationService));
             backgroundRunner.AddTask(new AdditionalGenerationSchedule(TimeSpan.FromHours(12), botClient, scheduleRequestService, notificationService));

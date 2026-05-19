@@ -14,9 +14,12 @@ namespace MyShift.Core.Interfaces
         Task InsertScheduleTemplateAsync(ScheduleTemplate sch_template, CancellationToken ct);
         Task<ScheduleTemplate?> GetTemplateAsync(int templateId, CancellationToken ct);
         Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct);
+        Task<Request> ApproveRequestAsync(int requestId, int processorId, string message, CancellationToken ct);
+        Task<Request> RejectRequestAsync(int requestId, int processorId, string message, CancellationToken ct);
         Task DeleteRequestAsync(int requestId, CancellationToken ct);
-        Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct);
+        Task<Request?> GetRequestAsync(int requestId, CancellationToken ct);
         Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct);
+        Task SetProcessor(int requestId, int processorId, CancellationToken ct);
         Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct);
         Task<UserSchedule?> GetScheduleAsync(int scheduleId,CancellationToken ct);
         Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct);

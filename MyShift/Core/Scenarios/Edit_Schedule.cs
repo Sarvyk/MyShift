@@ -34,6 +34,7 @@ namespace MyShift.Core.Scenarios
             Role roleCurrentUser = (Role)Int32.Parse(context.Data["userRole"].ToString());
             ToDoUser user = null;
             UserSchedule schedule = null;
+            string requestResult = "Ваша заявка выполнена. ";
             var callbackData = new List<KeyValuePair<string,string>>();
             switch (context.CurrentStep)
             {
@@ -61,14 +62,12 @@ namespace MyShift.Core.Scenarios
                         {
                             callbackData.Add(new KeyValuePair<string, string>($"{userSchedule.User.Id}){userSchedule.User.FirstName} {userSchedule.User.LastName}", ToDoItemCallbackDto.FromString($"showUser|{userSchedule.User.Id}").ToString()));
                         }
-                        Message callbackMessage = (Message)context.Data["CallbackMessage"];
                         // Если мы получаем в колбеке данные о кнопках смены страниц, то попадаем сюда и меняем страницу, а дальше сохраняем шаг тем же.
                         await botClient.EditMessageText(message.Chat, message.MessageId, "Выберите пользователя.👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString(context.Data["Callback"].ToString())), cancellationToken: ct);
                         return ScenarioResult.Transition;
                     }
                     else if (context.Data["Callback"].ToString().StartsWith("showUser|"))
                     {
-                        Message callbackMessage = (Message)context.Data["CallbackMessage"];
                         UserSchedule selectedUserSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync(ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId, ct);
                         context.Data.Add("scheduleId", selectedUserSchedule.Id);
                         context.Data.Add("userId", selectedUserSchedule.UserId);
@@ -94,7 +93,13 @@ namespace MyShift.Core.Scenarios
                     if (context.Data["Callback"].ToString() == "cancelEdit")
                     {
                         await botClient.SendMessage(message.Chat, "Редактирование отменено.", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
-                        return ScenarioResult.Completed;
+                        if (context.Data.ContainsKey("TakeRequest"))
+                        {
+                            await botClient.SendMessage(message.Chat, "Введите причину отказа для пользователя", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+                            context.CurrentStep = "EnterMessage";
+                            return ScenarioResult.Transition;
+                        }
+                        break;
                     }
                     else if (context.Data["Callback"].ToString() == "cancelSchedule")
                     {
@@ -181,12 +186,22 @@ namespace MyShift.Core.Scenarios
                     TimeSpan end = TimeSpan.Parse(message.Text);
                     Shift editedShiftTime = await _scheduleRequestService.EditShiftScheduleAsync(shiftId, start, end, ct);
                     await botClient.SendMessage(message.Chat, $"Время смены пользователя успешно изменено!", cancellationToken: ct);
-                    await botClient.SendMessage(editedShiftTime.UserSchedule.User.TelegramId,$"Время смены на \"{editedShiftTime.ShiftDate.ToShortDateString()}\" изменено на \"{editedShiftTime.StartTime.Value.ToString("hh\\:mm")}-{editedShiftTime.EndTime.Value.ToString("hh\\:mm")}\"",cancellationToken: ct);
+                    await botClient.SendMessage(editedShiftTime.UserSchedule.User.TelegramId,$"{(context.Data.ContainsKey("TakeRequest") ? requestResult : "")}Время смены на \"{editedShiftTime.ShiftDate.ToShortDateString()}\" изменено на \"{editedShiftTime.StartTime.Value.ToString("hh\\:mm")}-{editedShiftTime.EndTime.Value.ToString("hh\\:mm")}\"",cancellationToken: ct);
+                    if (context.Data.ContainsKey("TakeRequest"))
+                    {
+                        await _scheduleRequestService.ApproveRequestAsync(Int32.Parse(context.Data["TakeRequest"].ToString()), (await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct)).Id, $"Время смены #{editedShiftTime.Id} изменено на \"{editedShiftTime.StartTime.Value.ToString("hh\\:mm")}-{editedShiftTime.EndTime.Value.ToString("hh\\:mm")}\"", ct);
+                    }
                     break;
                 case "deleteShift":
                     if (context.Data["Callback"].ToString() == "no")
                     {
                         await botClient.SendMessage(message.Chat, "Удаление отменено↩️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+                        if (context.Data.ContainsKey("TakeRequest"))
+                        {
+                            await botClient.SendMessage(message.Chat, "Введите причину отказа для пользователя", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+                            context.CurrentStep = "EnterMessage";
+                            return ScenarioResult.Transition;
+                        }
                         break;
                     }
                     else if (context.Data["Callback"].ToString() == "yes")
@@ -194,7 +209,11 @@ namespace MyShift.Core.Scenarios
                         Shift deletingShift = await _scheduleRequestService.GetShiftByIdAsync(Int32.Parse(context.Data["shiftId"].ToString()), ct);
                         await _scheduleRequestService.DeleteShiftByShiftIdAsync(deletingShift.Id, ct);
                         await botClient.SendMessage(message.Chat, "Выбранная смена удалёна✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
-                        await botClient.SendMessage(deletingShift.UserSchedule.User.TelegramId, $"Ваша смена на \"{deletingShift.ShiftDate}\" отменена!", cancellationToken: ct);
+                        await botClient.SendMessage(deletingShift.UserSchedule.User.TelegramId, $"{(context.Data.ContainsKey("TakeRequest") ? requestResult : "")}Ваша смена на \"{deletingShift.ShiftDate.ToShortDateString()}\" отменена!", cancellationToken: ct);
+                        if (context.Data.ContainsKey("TakeRequest"))
+                        {
+                            await _scheduleRequestService.ApproveRequestAsync(Int32.Parse(context.Data["TakeRequest"].ToString()), (await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct)).Id, $"Смена #{deletingShift.Id} на {deletingShift.ShiftDate.ToShortDateString()} была отменена", ct);
+                        }
                         break;
                     }
                     return ScenarioResult.Transition;
@@ -202,16 +221,33 @@ namespace MyShift.Core.Scenarios
                     if (context.Data["Callback"].ToString() == "no")
                     {
                         await botClient.SendMessage(message.Chat, "Удаление отменено↩️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+                        if (context.Data.ContainsKey("TakeRequest"))
+                        {
+                            await botClient.SendMessage(message.Chat, "Введите причину отказа для пользователя", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+                            context.CurrentStep = "EnterMessage";
+                            return ScenarioResult.Transition;
+                        }
                         break;
                     }
                     else if (context.Data["Callback"].ToString() == "yes")
                     {
                         UserSchedule deletedUserSchedule = await _scheduleRequestService.DeleteScheduleByScheduleIdAsync(Int32.Parse(context.Data["scheduleId"].ToString()), ct);
                         await botClient.SendMessage(message.Chat, "Выбранный график удалён✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
-                        await botClient.SendMessage(deletedUserSchedule.User.TelegramId, $"Ваш график был удалён",cancellationToken: ct);
+                        await botClient.SendMessage(deletedUserSchedule.User.TelegramId, $"{(context.Data.ContainsKey("TakeRequest") ? requestResult : "")}Ваш график был удалён",cancellationToken: ct);
+                        if (context.Data.ContainsKey("TakeRequest"))
+                        {
+                            await _scheduleRequestService.ApproveRequestAsync(Int32.Parse(context.Data["TakeRequest"].ToString()), (await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct)).Id, $"График #{deletedUserSchedule.Id} был отменен", ct);
+                        }
                         break;
                     }
                     return ScenarioResult.Transition;
+                case "EnterMessage":
+                    int requestId = Int32.Parse(context.Data["TakeRequest"].ToString());
+                    user = await _userService.GetUserByTelegramIdAsync(message.From.Id, ct);
+                    Request request = await _scheduleRequestService.RejectRequestAsync(requestId, user.Id, message.Text, ct);
+                    await botClient.SendMessage(message.From.Id, "Заявка отклонена", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
+                    await botClient.SendMessage(request.Creator.TelegramId, $"Ваша заявка отклонена. Причина:\r\n---{message.Text}---", cancellationToken: ct);
+                    break;
             }
             return ScenarioResult.Completed;
         }

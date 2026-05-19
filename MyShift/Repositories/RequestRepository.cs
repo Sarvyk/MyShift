@@ -18,9 +18,32 @@ namespace MyShift.Repositories
         {
             _dbFactory = dbFactory;
         }
-        public Task ApproveRequestAsync(CancellationToken ct)
+        public async Task<Request> ApproveRequestAsync(int requestId, int processorId, string message, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            using var context = _dbFactory.CreateDbContext();
+            Request request = await context.Requests
+                .Include(req => req.Creator)
+                .FirstOrDefaultAsync(req => req.Id == requestId);
+            request.ProcessorId = processorId;
+            request.ResolutionComment = message;
+            request.Status = RequestStatus.Pending;
+            request.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync(ct);
+            return request;
+        }
+
+        public async Task<Request> RejectRequestAsync(int requestId, int processorId, string message, CancellationToken ct)
+        {
+            using var context = _dbFactory.CreateDbContext();
+            Request request = await context.Requests
+                .Include(req => req.Creator)
+                .FirstOrDefaultAsync(req => req.Id == requestId);
+            request.ProcessorId = processorId;
+            request.ResolutionComment = message;
+            request.Status = RequestStatus.Rejected;
+            request.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync(ct);
+            return request;
         }
 
         public async Task<Request> InsertRequestAsync(Request request, CancellationToken ct)
@@ -39,28 +62,35 @@ namespace MyShift.Repositories
             await context.SaveChangesAsync(ct);
         }
 
-        public async Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct)
+        public async Task<Request?> GetRequestAsync(int requestId, CancellationToken ct)
         {
             using var context = _dbFactory.CreateDbContext();
-            return await context.Requests.FirstOrDefaultAsync(req => req.CreatorId == userId && req.Id == requestId);
+            return await context.Requests
+                .Include(req => req.Creator)
+                .Include(req => req.Processor)
+                .FirstOrDefaultAsync(req => req.Id == requestId);
         }
 
-        public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId , CancellationToken ct)
+        public async Task<IReadOnlyList<Request>> GetRequestsByUserIdAsync(int userId , CancellationToken ct)
         {
             using var context = _dbFactory.CreateDbContext();
-            return await context.Requests.Where(req => req.CreatorId == userId && req.Status != RequestStatus.Removed).OrderByDescending(req => req.CreatedAt) .ToListAsync();
-        }
-
-        public Task RejectRequestAsync(CancellationToken ct)
-        {
-            using var context = _dbFactory.CreateDbContext();
-            throw new NotImplementedException();
+            return await context.Requests
+                .Where(req => req.CreatorId == userId && req.Status != RequestStatus.Removed && req.ProcessorId == null)
+                .OrderByDescending(req => req.CreatedAt) .ToListAsync();
         }
 
         public async Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct)
         {
             using var context = _dbFactory.CreateDbContext();
             return await context.Requests.Where(req => req.Status == RequestStatus.Pending).ToListAsync();
+        }
+
+        public async Task SetProcessor(int requestId, int processorId, CancellationToken ct)
+        {
+            using var context = _dbFactory.CreateDbContext();
+            Request request = await context.Requests.FirstOrDefaultAsync(req => req.Id == requestId, ct);
+            request.ProcessorId = processorId;
+            await context.SaveChangesAsync(ct);
         }
     }
 }

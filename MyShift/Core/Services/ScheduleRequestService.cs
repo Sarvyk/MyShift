@@ -61,14 +61,14 @@ namespace MyShift.Core.Services
             await _requestRepository.DeleteRequestAsync(requestId,ct);
         }
 
-        public async Task<Request?> GetRequestAsync(int userId, int requestId, CancellationToken ct)
+        public async Task<Request?> GetRequestAsync(int requestId, CancellationToken ct)
         {
-            return await _requestRepository.GetRequestAsync(userId, requestId, ct);
+            return await _requestRepository.GetRequestAsync(requestId, ct);
         }
 
         public async Task<IReadOnlyList<Request>> GetRequestsAsync(int userId, CancellationToken ct)
         {
-            return await _requestRepository.GetRequestsAsync(userId,ct);
+            return await _requestRepository.GetRequestsByUserIdAsync(userId,ct);
         }
 
         public async Task GetScheduleAsync(ToDoUser toDoUser, CancellationToken ct)
@@ -176,6 +176,21 @@ namespace MyShift.Core.Services
             }
             await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
             return firstWorkDay;
+        }
+
+        public async Task<Request> RejectRequestAsync(int requestId, int processorId, string message, CancellationToken ct)
+        {
+            return await _requestRepository.RejectRequestAsync(requestId, processorId, message, ct);
+        }
+
+        public async Task<Request> ApproveRequestAsync(int requestId, int processorId, string message, CancellationToken ct)
+        {
+            return await _requestRepository.ApproveRequestAsync(requestId, processorId, message, ct);
+        }
+
+        public async Task SetProcessor(int requestId, int processorId, CancellationToken ct)
+        {
+            await _requestRepository.SetProcessor(requestId, processorId, ct);
         }
     }
 }
