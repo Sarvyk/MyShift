@@ -16,6 +16,8 @@ namespace MyShift.Core.Models
         [ForeignKey("CreatorId")]
         public ToDoUser CreatorBy {  get; set; }
         public string RulesJson { get; set; }
+        [NotMapped]
+        public int SchedulePeriod = 6;
         public ScheduleTemplate() { }
         public ScheduleTemplate(ToDoUser creator)
         {  

@@ -16,8 +16,9 @@ namespace MyShift.Core.Interfaces
         Task InstertShiftsAsync(List<Shift> shifts, CancellationToken ct);
         Task<UserSchedule?> GetScheduleAsync(int scheduleId, CancellationToken ct);
         Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct);
-        Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct);
+        Task<Shift?> GetShiftByIdAsync(int shiftId, CancellationToken ct);
         Task<IReadOnlyList<Shift?>> GetAllShiftsForTomorrow(CancellationToken ct);
+        Task<Shift?> GetLastShiftsByScheduleId(int scheduleId, CancellationToken ct);
         Task<ScheduleTemplate?> GetScheduleTemplateAsync(int templateId, CancellationToken ct);
         Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct);
         Task InsertTemplateAsync(ScheduleTemplate schTemplate, CancellationToken ct);

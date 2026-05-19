@@ -34,50 +34,17 @@ namespace MyShift.Core.Services
                     firstWorkDay = firstWorkDay.AddDays(1);
                 }
                 schedule.StartDate = firstWorkDay;
-                schedule.EndDate = firstWorkDay.AddMonths(6);
-
-                int[] shifts = dayTemplate.Days.Split(',').Select(d => Int32.Parse(d)).ToArray();
-                var shiftList = new List<Shift>();
-                DateTime workDay = new DateTime(firstWorkDay.Year, firstWorkDay.Month, firstWorkDay.Day);
-                int i = 0;
+                schedule.EndDate = firstWorkDay.AddMonths(template.SchedulePeriod);
                 await _scheduleRepository.InsertScheduleAsync(schedule, ct);
-                while (workDay <= schedule.EndDate)
-                {//расчитываем смены
-                    string dayWeekStr = workDay.ToString("ddd").ToLower();
-                    Weekday weekDay = Enum.GetValues<Weekday>().Cast<Weekday>().ToArray().FirstOrDefault(wd => wd.GetDisplayShortName().ToLower() == dayWeekStr);
-                    if (shifts[i] == (int)weekDay)
-                    {
-                        shiftList.Add(new Shift(schedule.Id, workDay, dayTemplate.Start, dayTemplate.End, dayTemplate.Type, true));
-                        if (i == shifts.Length - 1)
-                            i = 0;
-                        else
-                            i++;
-                    }
-                    workDay = workDay.AddDays(1);
-                }
-                await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
+                await GenerationDayShifts(schedule, template.RulesJson, firstWorkDay, schedule.EndDate, ct);
+                
             }
             else if (template.Type == 1)
             {
-                CycleTemplate cycleTemplate = JsonSerializer.Deserialize<CycleTemplate>(template.RulesJson);
                 schedule.StartDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day).AddDays(1);
-                schedule.EndDate = schedule.StartDate.AddMonths(6);
+                schedule.EndDate = schedule.StartDate.AddMonths(template.SchedulePeriod);
                 await _scheduleRepository.InsertScheduleAsync(schedule, ct);
-                DateTime workDay = schedule.StartDate;
-                int i = 0;
-                var shiftList = new List<Shift>();
-                while (workDay <= schedule.EndDate)
-                {
-                    shiftList.Add(new Shift(schedule.Id, workDay, cycleTemplate[i].Start, cycleTemplate[i].End, cycleTemplate[i].TypeShift, true));
-                    if (i == cycleTemplate.Count-1)
-                    {
-                        i = 0;
-                    }
-                    else
-                        i++;
-                    workDay = workDay.AddDays(1);
-                }
-                await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
+                await GenerationCycleShifts(schedule, template.RulesJson, schedule.StartDate, schedule.EndDate, ct);
             }
         }
         public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct)
@@ -166,6 +133,49 @@ namespace MyShift.Core.Services
         public async Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct)
         {
             return await _requestRepository.GetActiveRequestsAsync(ct);
+        }
+        public async Task<DateTime> GenerationDayShifts(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct)
+        {
+            DayTemplate dayTemplate = JsonSerializer.Deserialize<DayTemplate>(rulesJson);
+            int[] shifts = dayTemplate.Days.Split(',').Select(d => Int32.Parse(d)).ToArray();
+            var shiftList = new List<Shift>();
+            DateTime workDay = new DateTime(firstWorkDay.Year, firstWorkDay.Month, firstWorkDay.Day);
+            int i = Array.FindIndex(shifts, s => s == (int)Enum.GetValues<Weekday>().FirstOrDefault(w => w.GetDisplayShortName().ToLower() == workDay.ToString("ddd").ToLower()));
+            while (workDay <= lastWorkDay)
+            {//расчитываем смены
+                string dayWeekStr = workDay.ToString("ddd").ToLower();
+                Weekday weekDay = Enum.GetValues<Weekday>().Cast<Weekday>().ToArray().FirstOrDefault(wd => wd.GetDisplayShortName().ToLower() == dayWeekStr);
+                if (shifts[i] == (int)weekDay)
+                {
+                    shiftList.Add(new Shift(schedule.Id, workDay, dayTemplate.Start, dayTemplate.End, dayTemplate.Type, true));
+                    if (i == shifts.Length - 1)
+                        i = 0;
+                    else
+                        i++;
+                }
+                workDay = workDay.AddDays(1);
+            }
+            await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
+            return firstWorkDay;
+        }
+        public async Task<DateTime> GenerationCycleShifts(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct)
+        {
+            CycleTemplate cycleTemplate = JsonSerializer.Deserialize<CycleTemplate>(rulesJson);
+            int i = 0;
+            var shiftList = new List<Shift>();
+            while (firstWorkDay <= lastWorkDay)
+            {
+                shiftList.Add(new Shift(schedule.Id, firstWorkDay, cycleTemplate[i].Start, cycleTemplate[i].End, cycleTemplate[i].TypeShift, true));
+                if (i == cycleTemplate.Count - 1)
+                {
+                    i = 0;
+                }
+                else
+                    i++;
+                firstWorkDay = firstWorkDay.AddDays(1);
+            }
+            await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
+            return firstWorkDay;
         }
     }
 }

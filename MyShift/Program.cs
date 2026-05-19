@@ -48,6 +48,8 @@ namespace MyShift
                 backgroundRunner.AddTask(new CollectingRemindersBackgroundTask(TimeSpan.FromMinutes(30), notificationService, scheduleRepository));
                 backgroundRunner.AddTask(new RequestScheduleBackgroundTask(TimeSpan.FromMinutes(10),botClient, userRepository, notificationService));
                 backgroundRunner.AddTask(new ReminderScheduleBackgroundTask(TimeSpan.FromMinutes(30), botClient, userRepository, notificationService));
+                backgroundRunner.AddTask(new ShiftExtensionNotificationPlanner(TimeSpan.FromSeconds(5), scheduleRepository, notificationService));
+                backgroundRunner.AddTask(new AdditionalGenerationSchedule(TimeSpan.FromSeconds(10), botClient, scheduleRequestService, notificationService));
                 backgroundRunner.StartTasks(cts.Token);
                 var handle = new UpdateHandler(userService, scheduleRequestService, scenarios, scenarioContextRepository);
                 botClient.StartReceiving(handle, cancellationToken:cts.Token);

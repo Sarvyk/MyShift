@@ -25,5 +25,7 @@ namespace MyShift.Core.Interfaces
         Task<IReadOnlyList<UserSchedule>> GetActiveSchedulesAsync(CancellationToken ct);
         Task<UserSchedule?> DeleteScheduleByScheduleIdAsync(int scheduleId, CancellationToken ct);
         Task DeleteShiftByShiftIdAsync(int shiftId, CancellationToken ct);
+        Task<DateTime> GenerationDayShifts(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct);
+        Task<DateTime> GenerationCycleShifts(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct);
     }
 }

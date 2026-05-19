@@ -67,6 +67,8 @@ namespace MyShift.Repositories
         {
             return await _context.UserSchedules
                 .Include(sch => sch.User)
+                .Include(sch => sch.Template)
+                .Include(sch => sch.Shifts)
                 .FirstOrDefaultAsync(sch => sch.Id == id, cancellationToken: ct);
         }
 
@@ -86,12 +88,12 @@ namespace MyShift.Repositories
                 .FirstOrDefaultAsync(us => us.UserId == userId && us.IsActive == true);
         }
 
-        public async Task<Shift?> GetShiftByIdAsync(int scheduleId, CancellationToken ct)
+        public async Task<Shift?> GetShiftByIdAsync(int shiftId, CancellationToken ct)
         {
             return await _context.Shifts
                 .Include(sch => sch.UserSchedule)
                 .ThenInclude(sch => sch.User)
-                .FirstOrDefaultAsync(sch => sch.Id == scheduleId);
+                .FirstOrDefaultAsync(sch => sch.Id == shiftId);
         }
 
         public async Task<IReadOnlyList<Shift>> GetAllShiftsForTomorrow(CancellationToken ct)
@@ -124,6 +126,14 @@ namespace MyShift.Repositories
             Shift shift = await _context.Shifts.FirstOrDefaultAsync(s => s.Id == shiftId);
             shift.Status = false;
             await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task<Shift?> GetLastShiftsByScheduleId(int scheduleId, CancellationToken ct)
+        {
+            return await _context.Shifts.Where(s => s.UserScheduleId == scheduleId)
+                .Include(s => s.UserSchedule)
+                .OrderByDescending(s => s.ShiftDate)
+                .FirstOrDefaultAsync(ct);
         }
     }
 }
