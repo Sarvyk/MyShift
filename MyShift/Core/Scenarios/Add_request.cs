@@ -31,12 +31,11 @@ namespace MyShift.Core.Scenarios
                 case null:
                     await botClient.SendMessage(message.Chat, "Опишите причину заявки✍️", replyMarkup:MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     context.CurrentStep = "Reason";
-                    context.Data.Add("User", await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(message.From.Id, ct)).Id, ct));
                     return ScenarioResult.Transition;
                 case "Reason":
-                    ToDoUser user = (ToDoUser)context.Data["User"];
-                    await _scheduleRequestService.InsertRequestAsync(user.Id, message.Text, ct);
-                    await botClient.SendMessage(message.Chat, $"{user.FirstName}, Заявка добавлена.✅ Ожидайте ответа", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
+                    ToDoUser currentUser = await _userService.GetUserByTelegramIdAsync(message.From.Id, ct);
+                    await _scheduleRequestService.InsertRequestAsync(currentUser.Id, message.Text, ct);
+                    await botClient.SendMessage(message.Chat, $"{currentUser.FirstName}, Заявка добавлена.✅ Ожидайте ответа", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
                     break;
             }
             return ScenarioResult.Completed;
