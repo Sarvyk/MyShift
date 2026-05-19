@@ -3,11 +3,6 @@ using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
 using MyShift.Core.Scenarios.Enums;
 using MyShift.Core.Scenarios.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
@@ -33,6 +28,12 @@ namespace MyShift.Core.Scenarios
                     context.CurrentStep = "Reason";
                     return ScenarioResult.Transition;
                 case "Reason":
+                    if (context.Data.ContainsKey("Callback"))
+                    {
+                        context.Data.Remove("Callback");
+                        await botClient.SendMessage(message.Chat, "Принимается только текст. Опишите причину заявки!", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
+                        return ScenarioResult.Transition;
+                    }
                     ToDoUser currentUser = await _userService.GetUserByTelegramIdAsync(message.From.Id, ct);
                     await _scheduleRequestService.InsertRequestAsync(currentUser.Id, message.Text, ct);
                     await botClient.SendMessage(message.Chat, $"{currentUser.FirstName}, Заявка добавлена.✅ Ожидайте ответа", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
