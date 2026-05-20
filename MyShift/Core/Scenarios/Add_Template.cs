@@ -60,6 +60,14 @@ namespace MyShift.Core.Scenarios
                 return await ProccessScenarioSecondVariantTemplate(botClient, context, message, ct);
             }
         }
+        /// <summary>
+        /// Создаёт шаблон линейного графика
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ProccessScenarioFirstVariantTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             switch (context.CurrentStep)
@@ -98,6 +106,14 @@ namespace MyShift.Core.Scenarios
             }
             return await InsertNewTemplate(botClient, context, message, ct);
         }
+        /// <summary>
+        /// Создаёт шаблон цикличного графика
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ProccessScenarioSecondVariantTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             bool restart = true;
@@ -166,6 +182,14 @@ namespace MyShift.Core.Scenarios
             }
             return await InsertNewTemplate(botClient, context, message, ct);
         }
+        /// <summary>
+        /// Добавляет созданный шаблон в список шаблонов
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> InsertNewTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             ToDoUser creator = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);

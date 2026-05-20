@@ -30,11 +30,25 @@ namespace MyShift
             _scenarios = scenarios;
             _scenarioContextRepository = scenarioContextRepository;
         }
+        /// <summary>
+        /// Обработка Exception телеграма
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="exception"></param>
+        /// <param name="source"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken cancellationToken)
         {//добавил пока что обычный вывод, пока не знаю что ещё тут можно сделать.
             Console.WriteLine(exception.Message);
         }
-
+        /// <summary>
+        /// Метод принимающий Callback и обычные Message
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
             Message message = (update.Message != null) ? update.Message : update.CallbackQuery.Message;
@@ -68,7 +82,13 @@ namespace MyShift
                 await _scenarioContextRepository.ResetContext((update.Message != null) ? update.Message.From.Id : update.CallbackQuery.From.Id, ct);
             }
         }
-
+        /// <summary>
+        /// Метод с обработкой текстовых сообщений
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task HandleMessage(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
             ScenarioContext? context;
@@ -147,7 +167,13 @@ namespace MyShift
                     break;
             }
         }
-
+        /// <summary>
+        /// Метод с обработкой Callback
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task HandleCallBack(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
             ScenarioContext? context = await _scenarioContextRepository.GetContext(update.CallbackQuery.From.Id, ct);
@@ -184,17 +210,11 @@ namespace MyShift
                     }
                     await _scheduleRequestService.SetProcessorAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
                     context = new ScenarioContext(ScenarioType.Cancel_Request);
-                    //context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
-                    //context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
-                    //context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
                 case CallbackQuery a when a.Data.StartsWith("register|"):
                     context = new ScenarioContext(ScenarioType.Registration);
-                    //context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
-                    //context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
-                    //context.Data.Add("userId", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
@@ -261,6 +281,13 @@ namespace MyShift
                     break;
             }
         }
+        /// <summary>
+        /// Получить список заявок
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task GetRequest(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
             ToDoUser user = await _userService.GetUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Id, ct);
@@ -277,6 +304,13 @@ namespace MyShift
             }
             await botClient.SendMessage(update.Message.Chat, "Выберите заявку, чтобы посмотреть её статус и описание📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showRequestPageNext||0")), cancellationToken: ct);
         }
+        /// <summary>
+        /// Создание списка смен
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task GetSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
         {
             UserSchedule userSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync((await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Id, ct);
@@ -292,6 +326,14 @@ namespace MyShift
             }
             await botClient.SendMessage(update.Message.Chat, "Выберите смену🗓️", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: ct);
         }
+        /// <summary>
+        /// Создание сценария
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="type"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task CreateScenario(ITelegramBotClient botClient, Update update, ScenarioType type, CancellationToken ct)
         {
             ScenarioContext context = new ScenarioContext(type);
@@ -300,13 +342,27 @@ namespace MyShift
         }
         private KeyValuePair<string,string> GetFormatAnswerRequest(Request request) => new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString());
         private KeyValuePair<string, string> GetFormatAnswerShift(Shift shift) => new KeyValuePair<string, string>(shift.ShiftDate.ToString("d"), ToDoItemCallbackDto.FromString($"showShift|{shift.Id}").ToString());
+        /// <summary>
+        /// Запуск сценария
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="user"></param>
+        /// <param name="msg"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task ProcessScenario(ITelegramBotClient botClient, ScenarioContext context, User user, Message msg, CancellationToken ct)
         {
             IScenario scenario = GetScenario(context.CurrentScenario);
             if (await scenario.HandleMessageAsync(botClient, context, msg, ct) == ScenarioResult.Completed)
                 await _scenarioContextRepository.ResetContext(user.Id, ct);
         }
-
+        /// <summary>
+        /// Получение сценария
+        /// </summary>
+        /// <param name="scenarioType"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         private IScenario GetScenario(ScenarioType scenarioType)
         {
             foreach (IScenario scenario in _scenarios)
@@ -318,7 +374,13 @@ namespace MyShift
             }
             throw new ArgumentException("Сценарий не найден⚠️");
         }
-
+        /// <summary>
+        /// Старт бота
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task StartCommand(ITelegramBotClient botClient,Update update, CancellationToken ct)
         {
             ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
@@ -340,6 +402,15 @@ namespace MyShift
             MarkupManager.SetCommand(botClient, toDoUser.Role, update.Message.Chat, ct);
             MarkupManager.SetStandartKeyboardButtonList(toDoUser.Role);
         }
+        /// <summary>
+        /// Проверка прав
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="user"></param>
+        /// <param name="roles"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<bool> CheckCredentials(ITelegramBotClient botClient, Update update, User user, Role roles, CancellationToken ct)
         {
             ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(user.Id,ct);
@@ -361,6 +432,13 @@ namespace MyShift
                 return false;
             }
         }
+        /// <summary>
+        /// Вызов помощи
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="update"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task HelpCommand(ITelegramBotClient botClient,Update update, CancellationToken ct)
         {
             ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);

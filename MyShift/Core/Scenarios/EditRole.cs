@@ -51,23 +51,24 @@ namespace MyShift.Core.Scenarios
                     return ScenarioResult.Transition;
                 case "selectUser":
                     Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
+                    string callback = context.Data["Callback"].ToString();
                     currentUser = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
                     users = (await _userService.GetAllUsersAsync(ct)).Where(user => user.Role < currentUser.Role && user.Id != currentUser.Id).ToList();
                     callbackData = new List<KeyValuePair<string, string>>();
-                    if (!context.Data["Callback"].ToString().StartsWith("showUser|"))
+                    if (!callback.StartsWith("showUser|"))
                     {
                         foreach (ToDoUser user in users)
                         {
                             callbackData.Add(new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}({user.Role.GetDisplayName()})", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString()));
                         }
                     }
-                    if (context.Data["Callback"].ToString().StartsWith("showUserPageNext"))
+                    if (callback.StartsWith("showUserPageNext"))
                     {
                         // Если мы получаем в колбеке данные о кнопках смены страниц, то попадаем сюда и меняем страницу, а дальше сохраняем шаг тем же.
                         context.Data["currentMessage"] = await botClient.EditMessageText(message.Chat, message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString(context.Data["Callback"].ToString())), cancellationToken: ct);
                         return ScenarioResult.Transition;
                     }
-                    context.Data.Add("userId", context.Data["Callback"].ToString());
+                    context.Data.Add("userId", callback);
                     List<Role> roles = new List<Role>();
                     if(currentUser.Role == Role.SuperAdministrator)
                       roles = Enum.GetValues<Role>().ToList();
@@ -83,9 +84,10 @@ namespace MyShift.Core.Scenarios
                     return ScenarioResult.Transition;
                 case "selectedRole":
                     Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
+                    callback = context.Data["Callback"].ToString();
                     currentUser = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
                     ToDoUser userEditRole = await _userService.GetUserAsync(ToDoItemCallbackDto.FromString(context.Data["userId"].ToString()).ToDoItemId, ct);
-                    Role roleResult = (Role)Int32.Parse(context.Data["Callback"].ToString());
+                    Role roleResult = (Role)Int32.Parse(callback);
                     await _userService.SetRoleAsync(userEditRole.Id, roleResult, ct);
                     await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userEditRole.Id}\" успешно изменена на\r\n\"{roleResult.GetDisplayName()}\"✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
                     await botClient.SendMessage(userEditRole.TelegramId, $"Ваша роль изменена на {roleResult.GetDisplayName()}",cancellationToken:ct);

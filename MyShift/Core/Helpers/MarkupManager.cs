@@ -7,10 +7,24 @@ namespace MyShift.Core.Helpers
 {
     internal static class MarkupManager
     {
+        /// <summary>
+        /// Задать команды меню для пользователя
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="role"></param>
+        /// <param name="chat"></param>
+        /// <param name="ct"></param>
         public static void SetCommand(ITelegramBotClient botClient, Role role, Chat chat, CancellationToken ct)
         {
             SetCommandChat(botClient, role, chat.Id, ct);
         }
+        /// <summary>
+        /// Задать команды меню для пользователя
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="role"></param>
+        /// <param name="chat"></param>
+        /// <param name="ct"></param>
         public static void SetCommand(ITelegramBotClient botClient, Role role, long chat, CancellationToken ct)
         {
             SetCommandChat(botClient, role, chat, ct);
@@ -78,6 +92,11 @@ namespace MyShift.Core.Helpers
                     break;
             }
         }
+        /// <summary>
+        /// Создать стандартную клавиатуру
+        /// </summary>
+        /// <param name="role"></param>
+        /// <returns></returns>
         public static ReplyKeyboardMarkup SetStandartKeyboardButtonList(Role role)
         {
             ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -132,6 +151,10 @@ namespace MyShift.Core.Helpers
                     return replyKeyboardMarkup;
             }
         }
+        /// <summary>
+        /// Создать клавиатуру для отмены сценария
+        /// </summary>
+        /// <returns></returns>
         public static ReplyKeyboardMarkup SetKeyboardCancel()
         {
             return new ReplyKeyboardMarkup(new KeyboardButton("/cancel"));

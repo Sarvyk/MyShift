@@ -57,7 +57,14 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Completed;
         }
-
+        /// <summary>
+        /// Отправляет ответное сообщение на заявку
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> EnterMessage(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 1);
@@ -68,7 +75,14 @@ namespace MyShift.Core.Scenarios
             await botClient.SendMessage(request.Creator.TelegramId, $"Ваша заявка отклонена. Причина:\r\n---{message.Text}---", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
-
+        /// <summary>
+        /// Удаление графика пользователя
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> DeleteUserSchedule(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
@@ -97,7 +111,14 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Transition;
         }
-
+        /// <summary>
+        /// Удаление смены пользователя
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> DeleteShift(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             ToDoUser currentUser = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
@@ -126,7 +147,14 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Transition;
         }
-
+        /// <summary>
+        /// Редактирование конечного времени смены пользователя
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> EditEndTimeShift(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.TextIsValidate(1, message.Text);
@@ -142,7 +170,14 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Completed;
         }
-
+        /// <summary>
+        /// Редактирование начального времени смены пользователя
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> EditStartTimeShift(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 1);
@@ -152,7 +187,14 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "editEndTimeShift";
             return ScenarioResult.Transition;
         }
-
+        /// <summary>
+        /// Различные действия со сменой
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShiftActions(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
@@ -175,6 +217,14 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Создаёт страницы с пагинацией смен для выбора под удаление
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShowShiftCancelPageNext(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             ToDoUser user = await _userService.GetUserAsync(Int32.Parse(context.Data["userId"].ToString()), ct);
@@ -193,6 +243,14 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Ввод нового начального времени
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShowShiftEdit(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Shift shift = await _scheduleRequestService.GetShiftByIdAsync(ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId, ct);
@@ -201,6 +259,14 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "editStartTimeShift";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Диалог с вопросом на удаление выбранной смены
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShowShiftCancel(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Вы уверены, что хотите отменить выбранную смену?", replyMarkup: new InlineKeyboardMarkup().AddNewRow(new InlineKeyboardButton[] { new InlineKeyboardButton("Да✅", "yes"), new InlineKeyboardButton("Нет❌", "no") }), cancellationToken: ct);
@@ -208,6 +274,14 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "deleteShift";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Создаёт страницы с пагинацией смен под редактирование
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShowShiftEditPageNext(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
@@ -221,6 +295,14 @@ namespace MyShift.Core.Scenarios
             context.Data["currentMessage"] = await botClient.EditMessageText(message.Chat, message.MessageId, "Выберите смену📋 для редактирования.✏️", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString(context.Data["Callback"].ToString())), cancellationToken: ct);
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Создаёт первую страницу с пользователями
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShowUsers(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             IReadOnlyList<UserSchedule> schedules = await _scheduleRequestService.GetActiveSchedulesAsync(ct);
@@ -239,6 +321,14 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "NextPage";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Создаёт страницы с пользователями с возможностью переключения
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> NextPageWithSelectUser(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             if (!context.Data.ContainsKey("currentMessage"))
@@ -280,6 +370,14 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Метод с действиями для графика
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> scheduleActions(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
@@ -303,6 +401,15 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Отмена редактирования графика
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="currentUser"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> CancelEdit(ITelegramBotClient botClient, ScenarioContext context, Message message, ToDoUser currentUser, CancellationToken ct)
         {
             await botClient.SendMessage(message.Chat, "Редактирование отменено.", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
@@ -314,12 +421,30 @@ namespace MyShift.Core.Scenarios
             }
             return ScenarioResult.Completed;
         }
+        /// <summary>
+        /// Отмена активного графика
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="currentUser"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> CancelSchedule(ITelegramBotClient botClient, ScenarioContext context, Message message, ToDoUser currentUser, CancellationToken ct)
         {
             context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Вы уверены, что хотите отменить выбранный график❓", replyMarkup: new InlineKeyboardMarkup().AddNewRow(new InlineKeyboardButton[] { new InlineKeyboardButton("Да✅", "yes"), new InlineKeyboardButton("Нет❌", "no") }), cancellationToken: ct);
             context.CurrentStep = "deleteUserSchedule";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Создание страниц со сменами для выбора под удаление
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="currentUser"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> CancelShift(ITelegramBotClient botClient, ScenarioContext context, Message message, ToDoUser currentUser, CancellationToken ct)
         {
             ToDoUser user = await _userService.GetUserAsync(Int32.Parse(context.Data["userId"].ToString()), ct);
@@ -335,6 +460,15 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "selectShift";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Создание страниц со сменами под редактирование
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="currentUser"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> EditShift(ITelegramBotClient botClient, ScenarioContext context, Message message, ToDoUser currentUser, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);

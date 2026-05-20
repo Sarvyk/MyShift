@@ -42,6 +42,14 @@ namespace MyShift.Core.Scenarios
             }
             return result;
         }
+        /// <summary>
+        /// Получить список шаблонов и создать первую страницу
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShowTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             string callback = context.Data["Callback"].ToString();
@@ -61,6 +69,14 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "NextPage";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Тоже самое, что и ShowTemplate, но даёт перелистывать страницы
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> NextPageWithSelectTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
@@ -80,6 +96,14 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "NextPage";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Получить список пользователей и создать первую страницу
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> ShowUser(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             string callback = context.Data["Callback"].ToString();
@@ -99,6 +123,14 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "SelectUser";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Тоже самое, что и ShowUser, но даёт перелистывать страницы
+        /// </summary>
+        /// <param name="botClient"></param>
+        /// <param name="context"></param>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> NextPageWithSelectUser(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
             Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
@@ -119,6 +151,16 @@ namespace MyShift.Core.Scenarios
             context.CurrentStep = "SelectUser";
             return ScenarioResult.Transition;
         }
+        /// <summary>
+        /// Создаёт график для пользователя
+        /// </summary>
+        /// <param name="botClient">Клиент Телеграма</param>
+        /// <param name="context">Контекст сценария</param>
+        /// <param name="message">Передаваемый текст и данные о пользователе и чате</param>
+        /// <param name="templateId"></param>
+        /// <param name="userId"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
         private async Task<ScenarioResult> CreateScheduleForUser(ITelegramBotClient botClient, ScenarioContext context, Message message, int templateId, int userId, CancellationToken ct)
         {
             UserSchedule? userSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync(userId, ct);

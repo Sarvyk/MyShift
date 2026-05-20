@@ -7,12 +7,20 @@ namespace MyShift.Core.Helpers
     internal static class PageBuilder
     {
         private const int _pageSize = 2;
+        /// <summary>
+        /// Создать кнопки страницы
+        /// </summary>
+        /// <param name="callbackData"></param>
+        /// <param name="listDto"></param>
+        /// <returns></returns>
         public static InlineKeyboardMarkup BuildPagedButtons(IReadOnlyList<KeyValuePair<string, string>> callbackData, PagedListCallbackDto listDto)
         {
             InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
             int allCount = callbackData.Count;
-            int totalPage = (int)Math.Round((decimal)callbackData.Count / _pageSize, MidpointRounding.ToPositiveInfinity);//расчёт количества страниц.
-            callbackData = callbackData.GetBatchByNumber(_pageSize, listDto.Page).ToList();//берём только те элементы, где страница равна той, которая указана во втором параметре.
+            // расчёт количества страниц.
+            int totalPage = (int)Math.Round((decimal)callbackData.Count / _pageSize, MidpointRounding.ToPositiveInfinity);
+            // берём только те элементы, где страница равна той, которая указана во втором параметре.
+            callbackData = callbackData.GetBatchByNumber(_pageSize, listDto.Page).ToList();
             foreach (KeyValuePair<string, string> keyVal in callbackData)
             {
                 keyboardMarkup.AddNewRow(new InlineKeyboardButton(keyVal.Key, keyVal.Value));

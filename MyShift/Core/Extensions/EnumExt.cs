@@ -10,11 +10,21 @@ namespace MyShift.Core.Extensions
 {
     public static class EnumExt
     {
+        /// <summary>
+        /// Получить аттрибутное имя
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string GetDisplayName(this Enum value)
         {
             DisplayAttribute? datr = GetDisplayAttribute(value);
             return datr?.GetName() ?? "";
         }
+        /// <summary>
+        /// Получить краткое аттрибутное имя
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string GetDisplayShortName(this Enum value)
         {
             DisplayAttribute? datr = GetDisplayAttribute(value);
