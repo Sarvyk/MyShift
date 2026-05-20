@@ -54,11 +54,6 @@ namespace MyShift
                         return;
                 }
             }
-            catch (IndexOutOfRangeException ex)
-            {
-                await botClient.SendMessage(message.Chat, ex.Message, replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
-                await _scenarioContextRepository.ResetContext((update.Message != null) ? update.Message.From.Id : update.CallbackQuery.From.Id, ct);
-            }
             catch (FormatException ex)
             {
                 await botClient.SendMessage(message.Chat, ex.Message, cancellationToken: ct);
@@ -125,25 +120,25 @@ namespace MyShift
                 case "/create_schedule":
                     if (await CheckCredentials(botClient, update, update.Message.From, onlyAdministrator, ct))
                     {
-                        await CreateSchedule(botClient, update, context, ct);
+                        await CreateScenario(botClient, update, ScenarioType.Add_Schedule, ct);
                     }
                     break;
                 case "/edit_schedule":
                     if (await CheckCredentials(botClient, update, update.Message.From, nonUser, ct))
                     {
-                        await EditSchedule(botClient, update, ct);
+                        await CreateScenario(botClient, update, ScenarioType.Edit_Schedule, ct);
                     }
                     break;
                 case "/create_template":
                     if (await CheckCredentials(botClient, update, update.Message.From, onlyAdministrator, ct))
                     {
-                        await CreateTemplate(botClient, update, context, ct);
+                        await CreateScenario(botClient, update, ScenarioType.Add_Template, ct);
                     }
                     break;
                 case "/edit_role":
                     if (await CheckCredentials(botClient, update, update.Message.From, onlyAdministrator, ct))
                     {
-                        await EditRole(botClient, update, context, ct);
+                        await CreateScenario(botClient, update, ScenarioType.Edit_Role, ct);
                     }
                     break;
                 default:
@@ -159,9 +154,6 @@ namespace MyShift
             if (context != null)
             {
                 context.Data["Callback"] = update.CallbackQuery.Data;
-                context.Data["CallbackMessage"] = update.CallbackQuery.Message;
-                context.Data["TelegramUserId"] = update.CallbackQuery.From.Id;
-                context.Data["ChatId"] = update.CallbackQuery.Message.Chat.Id;
                 await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                 return;
             }
@@ -173,7 +165,7 @@ namespace MyShift
                         await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Заявка уже обработана.", cancellationToken: ct);
                         break;
                     }
-                    await _scheduleRequestService.SetProcessor(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
+                    await _scheduleRequestService.SetProcessorAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
                     Request requestProcessing = await _scheduleRequestService.GetRequestAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, ct);
                     context = new ScenarioContext(ScenarioType.Edit_Schedule);
                     context.Data.Add("Callback", $"showUser|{requestProcessing.CreatorId}");
@@ -190,19 +182,19 @@ namespace MyShift
                         await botClient.EditMessageText(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Message.MessageId, "Заявка уже обработана.", cancellationToken: ct);
                         break;
                     }
-                    await _scheduleRequestService.SetProcessor(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
+                    await _scheduleRequestService.SetProcessorAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
                     context = new ScenarioContext(ScenarioType.Cancel_Request);
-                    context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
-                    context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
-                    context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
+                    //context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
+                    //context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
+                    //context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
                 case CallbackQuery a when a.Data.StartsWith("register|"):
                     context = new ScenarioContext(ScenarioType.Registration);
-                    context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
-                    context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
-                    context.Data.Add("userId", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
+                    //context.Data.Add("TelegramUserId", update.CallbackQuery.From.Id);
+                    //context.Data.Add("ChatId", update.CallbackQuery.Message.Chat.Id);
+                    //context.Data.Add("userId", ToDoItemCallbackDto.FromString(a.Data.ToString()).ToDoItemId);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
@@ -263,7 +255,7 @@ namespace MyShift
                 case CallbackQuery a when a.Data.StartsWith("deleteRequest"):
                     context = new ScenarioContext(ScenarioType.Delete_Request);
                     context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data).ToString());
-                    context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Role);
+                    //context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Role);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
@@ -300,47 +292,14 @@ namespace MyShift
             }
             await botClient.SendMessage(update.Message.Chat, "Выберите смену🗓️", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showShiftsPageNext||0")), cancellationToken: ct);
         }
-        private async Task EditSchedule(ITelegramBotClient botClient, Update update, CancellationToken ct)
+        private async Task CreateScenario(ITelegramBotClient botClient, Update update, ScenarioType type, CancellationToken ct)
         {
-            ScenarioContext context = new ScenarioContext(ScenarioType.Edit_Schedule);
-            context.Data.Add("TelegramUserId", update.Message.From.Id);
-            context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Role);
-            context.Data.Add("ChatId", update.Message.Chat.Id);
+            ScenarioContext context = new ScenarioContext(type);
             await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
             await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
-        }
-        private async Task CreateSchedule(ITelegramBotClient botClient, Update update, ScenarioContext context, CancellationToken ct)
-        {
-            context = new ScenarioContext(ScenarioType.Add_Schedule);
-            context.Data.Add("TelegramUserId", update.Message.From.Id);
-            context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Role);
-            context.Data.Add("ChatId", update.Message.Chat.Id);
-            context.Data.Add("Callback", string.Empty);
-            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
-            await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
-        }
-        private async Task CreateTemplate(ITelegramBotClient botClient, Update update, ScenarioContext context, CancellationToken ct)
-        {
-            context = new ScenarioContext(ScenarioType.Add_Template);
-            context.Data.Add("TelegramUserId", update.Message.From.Id);
-            context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Role);
-            context.Data.Add("ChatId", update.Message.Chat.Id);
-            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
-            await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
-        }
-        private async Task EditRole(ITelegramBotClient botClient, Update update, ScenarioContext context, CancellationToken ct)
-        {
-            context = new ScenarioContext(ScenarioType.Edit_Role);
-            context.Data.Add("TelegramUserId", update.Message.From.Id);
-            context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct)).Role);
-            context.Data.Add("ChatId", update.Message.Chat.Id);
-            await _scenarioContextRepository.SetContext(update.Message.From.Id, context, ct);
-            await ProcessScenario(botClient, context, update.Message.From, update.Message, ct);
-            
         }
         private KeyValuePair<string,string> GetFormatAnswerRequest(Request request) => new KeyValuePair<string, string>(request.CreatedAt.ToString("dd MMM yyyy года HH:mm:ss"), ToDoItemCallbackDto.FromString($"showRequest|{request.Id}").ToString());
         private KeyValuePair<string, string> GetFormatAnswerShift(Shift shift) => new KeyValuePair<string, string>(shift.ShiftDate.ToString("d"), ToDoItemCallbackDto.FromString($"showShift|{shift.Id}").ToString());
-        private KeyValuePair<string, string> GetFormatAnswerUser(ToDoUser user) => new KeyValuePair<string, string>($"{user.Id}){user.FirstName} {user.LastName}", ToDoItemCallbackDto.FromString($"showUser|{user.Id}").ToString());
         private async Task ProcessScenario(ITelegramBotClient botClient, ScenarioContext context, User user, Message msg, CancellationToken ct)
         {
             IScenario scenario = GetScenario(context.CurrentScenario);
@@ -370,7 +329,7 @@ namespace MyShift
             else
             {
                 toDoUser = await _userService.RegisterUserAsync(update.Message.Chat.Id, update.Message.From, ct);
-                var staffs = await _userService.GetStaff(ct);
+                var staffs = await _userService.GetStaffAsync(ct);
                 foreach(ToDoUser user in staffs)
                 {
                     await botClient.SendMessage(user.TelegramId, "Новый пользователь зашёл в бот.", 

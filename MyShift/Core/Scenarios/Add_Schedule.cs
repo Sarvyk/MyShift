@@ -89,7 +89,7 @@ namespace MyShift.Core.Scenarios
                 int userId = ToDoItemCallbackDto.FromString(callback).ToDoItemId;
                 return await CreateScheduleForUser(botClient, context, message, templateId, userId, ct);
             }
-            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsers(ct);
+            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsersAsync(ct);
             var callbackData = new List<KeyValuePair<string, string>>();
             foreach (ToDoUser user in users)
             {
@@ -109,7 +109,7 @@ namespace MyShift.Core.Scenarios
                 int userId = ToDoItemCallbackDto.FromString(callback).ToDoItemId;
                 return await CreateScheduleForUser(botClient, context, message, templateId, userId, ct);
             }
-            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsers(ct);
+            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsersAsync(ct);
             var callbackData = new List<KeyValuePair<string, string>>();
             foreach (ToDoUser user in users)
             {

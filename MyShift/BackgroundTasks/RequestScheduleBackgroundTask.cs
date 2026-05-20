@@ -23,7 +23,7 @@ namespace MyShift.BackgroundTasks
         protected override async Task Execute(CancellationToken ct)
         {
             var notifications = await _notificationService.GetScheduledNotification(DateTime.UtcNow, ct);
-            var Staff = await _userRepository.GetStaff(ct);
+            var Staff = await _userRepository.GetStaffAsync(ct);
             foreach (Notification notification in notifications)
             {
                 if (notification.Type.StartsWith("Request"))

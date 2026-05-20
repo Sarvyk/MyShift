@@ -24,7 +24,7 @@ namespace MyShift.BackgroundTasks
             var schedules = await _scheduleRepository.GetActiveSchedulesAsync(ct);
             foreach(var schedule in schedules)
             {
-                var shifts = await _scheduleRepository.GetLastShiftsByScheduleId(schedule.Id, ct);
+                var shifts = await _scheduleRepository.GetLastShiftsByScheduleIdAsync(schedule.Id, ct);
                 DateTime shiftDate = shifts.ShiftDate.Date.AddDays(-1);
                 await _notificationService.ScheduleNotification(shifts.UserSchedule.UserId, $"ScheduleExtension_{shifts.UserScheduleId}_{DateOnly.FromDateTime(DateTime.UtcNow)}", "Ваш график был продлён до ", shiftDate, ct);
             }

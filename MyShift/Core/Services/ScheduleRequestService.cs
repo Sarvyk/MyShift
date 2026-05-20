@@ -36,14 +36,14 @@ namespace MyShift.Core.Services
                 schedule.StartDate = firstWorkDay;
                 schedule.EndDate = firstWorkDay.AddMonths(template.SchedulePeriod);
                 await _scheduleRepository.InsertScheduleAsync(schedule, ct);
-                await GenerationDayShifts(schedule, template.RulesJson, firstWorkDay, schedule.EndDate, ct);
+                await GenerationDayShiftsAsync(schedule, template.RulesJson, firstWorkDay, schedule.EndDate, ct);
             }
             else if (template.Type == 1)
             {
                 schedule.StartDate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day).AddDays(1);
                 schedule.EndDate = schedule.StartDate.AddMonths(template.SchedulePeriod);
                 await _scheduleRepository.InsertScheduleAsync(schedule, ct);
-                await GenerationCycleShifts(schedule, template.RulesJson, schedule.StartDate, schedule.EndDate, ct);
+                await GenerationCycleShiftsAsync(schedule, template.RulesJson, schedule.StartDate, schedule.EndDate, ct);
             }
             return await _scheduleRepository.GetActiveScheduleByUserAsync(schedule.UserId, ct);
         }
@@ -134,7 +134,7 @@ namespace MyShift.Core.Services
         {
             return await _requestRepository.GetActiveRequestsAsync(ct);
         }
-        public async Task<DateTime> GenerationDayShifts(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct)
+        public async Task<DateTime> GenerationDayShiftsAsync(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct)
         {
             DayTemplate dayTemplate = JsonSerializer.Deserialize<DayTemplate>(rulesJson);
             int[] shifts = dayTemplate.Days.Split(',').Select(d => Int32.Parse(d)).ToArray();
@@ -158,7 +158,7 @@ namespace MyShift.Core.Services
             await _scheduleRepository.InstertShiftsAsync(shiftList, ct);
             return firstWorkDay;
         }
-        public async Task<DateTime> GenerationCycleShifts(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct)
+        public async Task<DateTime> GenerationCycleShiftsAsync(UserSchedule schedule, string rulesJson, DateTime firstWorkDay, DateTime lastWorkDay, CancellationToken ct)
         {
             CycleTemplate cycleTemplate = JsonSerializer.Deserialize<CycleTemplate>(rulesJson);
             int i = 0;
@@ -188,9 +188,9 @@ namespace MyShift.Core.Services
             return await _requestRepository.ApproveRequestAsync(requestId, processorId, message, ct);
         }
 
-        public async Task SetProcessor(int requestId, int processorId, CancellationToken ct)
+        public async Task SetProcessorAsync(int requestId, int processorId, CancellationToken ct)
         {
-            await _requestRepository.SetProcessor(requestId, processorId, ct);
+            await _requestRepository.SetProcessorAsync(requestId, processorId, ct);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace MyShift.Repositories
             using var context = _dbFactory.CreateDbContext();
             Request request = await context.Requests
                 .Include(req => req.Creator)
-                .FirstOrDefaultAsync(req => req.Id == requestId);
+                .FirstOrDefaultAsync(req => req.Id == requestId, ct);
             request.ProcessorId = processorId;
             request.ResolutionComment = message;
             request.Status = RequestStatus.Pending;
@@ -37,7 +37,7 @@ namespace MyShift.Repositories
             using var context = _dbFactory.CreateDbContext();
             Request request = await context.Requests
                 .Include(req => req.Creator)
-                .FirstOrDefaultAsync(req => req.Id == requestId);
+                .FirstOrDefaultAsync(req => req.Id == requestId, ct);
             request.ProcessorId = processorId;
             request.ResolutionComment = message;
             request.Status = RequestStatus.Rejected;
@@ -57,7 +57,7 @@ namespace MyShift.Repositories
         public async Task DeleteRequestAsync(int requestId, CancellationToken ct)
         {
             using var context = _dbFactory.CreateDbContext();
-            Request? request = await context.Requests.FindAsync(requestId);
+            Request? request = await context.Requests.FindAsync(requestId,ct);
             request.Status = RequestStatus.Removed;
             await context.SaveChangesAsync(ct);
         }
@@ -68,7 +68,7 @@ namespace MyShift.Repositories
             return await context.Requests
                 .Include(req => req.Creator)
                 .Include(req => req.Processor)
-                .FirstOrDefaultAsync(req => req.Id == requestId);
+                .FirstOrDefaultAsync(req => req.Id == requestId,ct);
         }
 
         public async Task<IReadOnlyList<Request>> GetRequestsByUserIdAsync(int userId , CancellationToken ct)
@@ -76,16 +76,16 @@ namespace MyShift.Repositories
             using var context = _dbFactory.CreateDbContext();
             return await context.Requests
                 .Where(req => req.CreatorId == userId && req.Status != RequestStatus.Removed && req.ProcessorId == null)
-                .OrderByDescending(req => req.CreatedAt) .ToListAsync();
+                .OrderByDescending(req => req.CreatedAt).ToListAsync(ct);
         }
 
         public async Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct)
         {
             using var context = _dbFactory.CreateDbContext();
-            return await context.Requests.Where(req => req.Status == RequestStatus.Pending).ToListAsync();
+            return await context.Requests.Where(req => req.Status == RequestStatus.Pending).ToListAsync(ct);
         }
 
-        public async Task SetProcessor(int requestId, int processorId, CancellationToken ct)
+        public async Task SetProcessorAsync(int requestId, int processorId, CancellationToken ct)
         {
             using var context = _dbFactory.CreateDbContext();
             Request request = await context.Requests.FirstOrDefaultAsync(req => req.Id == requestId, ct);

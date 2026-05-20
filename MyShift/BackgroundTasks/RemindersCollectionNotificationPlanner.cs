@@ -23,7 +23,7 @@ namespace MyShift.BackgroundTasks
 
         protected override async Task Execute(CancellationToken ct)
         {
-            var shifts = await _scheduleRepository.GetAllShiftsForTomorrow(ct);
+            var shifts = await _scheduleRepository.GetAllShiftsForTomorrowAsync(ct);
             foreach(Shift shift in shifts)
             {
                 await _notificationService.ScheduleNotification(shift.UserSchedule.User.Id, $"Shift_{shift.Id}_{DateOnly.FromDateTime(DateTime.UtcNow)}", 

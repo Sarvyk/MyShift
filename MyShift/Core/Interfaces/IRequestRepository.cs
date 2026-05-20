@@ -13,7 +13,7 @@ namespace MyShift.Core.Interfaces
         Task<IReadOnlyList<Request>> GetRequestsByUserIdAsync(int userId, CancellationToken ct);
         Task<IReadOnlyList<Request>> GetActiveRequestsAsync(CancellationToken ct);
         Task<Request?> GetRequestAsync(int requestId, CancellationToken ct);
-        Task SetProcessor(int requestId, int processorId, CancellationToken ct);
+        Task SetProcessorAsync(int requestId, int processorId, CancellationToken ct);
         Task<Request> ApproveRequestAsync(int requestId, int processorId, string message, CancellationToken ct);
         Task<Request> RejectRequestAsync(int requestId, int processorId, string message, CancellationToken ct);
         Task DeleteRequestAsync(int requestId, CancellationToken ct);

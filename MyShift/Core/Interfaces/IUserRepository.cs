@@ -14,7 +14,7 @@ namespace MyShift.Core.Interfaces
         Task<ToDoUser?> GetUserByIdAsync(int userId, CancellationToken ct);
         Task<ToDoUser?> GetUserByTelegramIdAsync(long userId, CancellationToken ct);
         Task<IReadOnlyList<ToDoUser>> GetAllUsersAsync(CancellationToken ct);
-        Task SetRole(int userId, Role role, CancellationToken ct);
-        Task<IReadOnlyList<ToDoUser>> GetStaff(CancellationToken ct);
+        Task SetRoleAsync(int userId, Role role, CancellationToken ct);
+        Task<IReadOnlyList<ToDoUser>> GetStaffAsync(CancellationToken ct);
     }
 }

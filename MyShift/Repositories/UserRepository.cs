@@ -41,22 +41,22 @@ namespace MyShift.Repositories
         public async Task<IReadOnlyList<ToDoUser>> GetAllUsersAsync(CancellationToken ct)
         {
             await using var context = _dbFactory.CreateDbContext();
-            return await context.Users.ToListAsync(cancellationToken:ct);
+            return await context.Users.ToListAsync(ct);
         }
 
-        public async Task SetRole(int userId, Role role, CancellationToken ct)
+        public async Task SetRoleAsync(int userId, Role role, CancellationToken ct)
         {
             await using var context = _dbFactory.CreateDbContext();
-            ToDoUser user = await context.Users.FirstOrDefaultAsync(user => user.Id == userId);
+            ToDoUser user = await context.Users.FirstOrDefaultAsync(user => user.Id == userId, ct);
             user.Role = role;
             await context.SaveChangesAsync(ct);
         }
 
-        public async Task<IReadOnlyList<ToDoUser>> GetStaff(CancellationToken ct)
+        public async Task<IReadOnlyList<ToDoUser>> GetStaffAsync(CancellationToken ct)
         {
             await using var context = _dbFactory.CreateDbContext();
             Role roles = Role.Operator | Role.Administrator | Role.SuperAdministrator;
-            return await context.Users.Where(user => (user.Role & roles) != 0).ToListAsync();
+            return await context.Users.Where(user => (user.Role & roles) != 0).ToListAsync(ct);
         }
     }
 }

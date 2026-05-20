@@ -32,9 +32,9 @@ namespace MyShift.Core.Scenarios
                     ToDoUser currentUser = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
                     IReadOnlyList<ToDoUser> users = null;
                     if (currentUser.Role != Role.SuperAdministrator)
-                        users = (await _userService.GetAllUsers(ct)).Where(user => user.Role<currentUser.Role && user.Id != currentUser.Id).ToList();
+                        users = (await _userService.GetAllUsersAsync(ct)).Where(user => user.Role<currentUser.Role && user.Id != currentUser.Id).ToList();
                     else
-                        users = (await _userService.GetAllUsers(ct)).Where(user => user.Id != currentUser.Id).ToList();
+                        users = (await _userService.GetAllUsersAsync(ct)).Where(user => user.Id != currentUser.Id).ToList();
                     if (users.Count == 0)
                     {
                         await botClient.SendMessage(message.Chat, "Пользователи не найдены!🔍❌", cancellationToken: ct);
@@ -52,7 +52,7 @@ namespace MyShift.Core.Scenarios
                 case "selectUser":
                     Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
                     currentUser = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
-                    users = (await _userService.GetAllUsers(ct)).Where(user => user.Role < currentUser.Role && user.Id != currentUser.Id).ToList();
+                    users = (await _userService.GetAllUsersAsync(ct)).Where(user => user.Role < currentUser.Role && user.Id != currentUser.Id).ToList();
                     callbackData = new List<KeyValuePair<string, string>>();
                     if (!context.Data["Callback"].ToString().StartsWith("showUser|"))
                     {
@@ -86,7 +86,7 @@ namespace MyShift.Core.Scenarios
                     currentUser = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
                     ToDoUser userEditRole = await _userService.GetUserAsync(ToDoItemCallbackDto.FromString(context.Data["userId"].ToString()).ToDoItemId, ct);
                     Role roleResult = (Role)Int32.Parse(context.Data["Callback"].ToString());
-                    await _userService.SetRole(userEditRole.Id, roleResult, ct);
+                    await _userService.SetRoleAsync(userEditRole.Id, roleResult, ct);
                     await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userEditRole.Id}\" успешно изменена на\r\n\"{roleResult.GetDisplayName()}\"✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
                     await botClient.SendMessage(userEditRole.TelegramId, $"Ваша роль изменена на {roleResult.GetDisplayName()}",cancellationToken:ct);
                     MarkupManager.SetCommand(botClient, roleResult, message.Chat, ct);

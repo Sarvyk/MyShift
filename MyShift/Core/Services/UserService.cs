@@ -18,14 +18,14 @@ namespace MyShift.Core.Services
             _userRepository = repository;
         }
 
-        public Task<IReadOnlyList<ToDoUser>> GetAllUsers(CancellationToken ct)
+        public Task<IReadOnlyList<ToDoUser>> GetAllUsersAsync(CancellationToken ct)
         {
             return _userRepository.GetAllUsersAsync(ct);
         }
 
-        public async Task<IReadOnlyList<ToDoUser>> GetStaff(CancellationToken ct)
+        public async Task<IReadOnlyList<ToDoUser>> GetStaffAsync(CancellationToken ct)
         {
-            return await _userRepository.GetStaff(ct);
+            return await _userRepository.GetStaffAsync(ct);
         }
 
         public async Task<ToDoUser?> GetUserAsync(int id, CancellationToken ct)
@@ -45,9 +45,9 @@ namespace MyShift.Core.Services
             return toDoUser;
         }
 
-        public async Task SetRole(int userId, Role role, CancellationToken ct)
+        public async Task SetRoleAsync(int userId, Role role, CancellationToken ct)
         {
-            await _userRepository.SetRole(userId, role, ct);
+            await _userRepository.SetRoleAsync(userId, role, ct);
         }
     }
 }

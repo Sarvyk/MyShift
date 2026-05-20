@@ -61,7 +61,7 @@ namespace MyShift.BackgroundTasks
                             // находим по дню недели следующий день смены
                             newScheduleFirstDay = newScheduleFirstDay.AddDays(1);
                         }
-                        DateTime newLastDate = await _scheduleRequestService.GenerationDayShifts(userSchedule, userSchedule.Template.RulesJson, newScheduleFirstDay, newScheduleFirstDay.AddMonths(userSchedule.Template.SchedulePeriod), ct);
+                        DateTime newLastDate = await _scheduleRequestService.GenerationDayShiftsAsync(userSchedule, userSchedule.Template.RulesJson, newScheduleFirstDay, newScheduleFirstDay.AddMonths(userSchedule.Template.SchedulePeriod), ct);
                         await _botClient.SendMessage(userSchedule.User.TelegramId, notification.Text + newLastDate.Date.ToShortDateString(), cancellationToken: ct);
                         await _notificationService.MarkNotified(notification.id, ct);
                     }
@@ -70,7 +70,7 @@ namespace MyShift.BackgroundTasks
                         // Тут просто сделаем первый день выходной, а со следующего последовательность начнётся сначала.
                         DateTime firstWorkDay = lastShift.ShiftDate.AddDays(2);
                         DateTime lastWorkDay = firstWorkDay.AddMonths(userSchedule.Template.SchedulePeriod);
-                        DateTime newLastDate = await _scheduleRequestService.GenerationCycleShifts(userSchedule, userSchedule.Template.RulesJson, firstWorkDay, lastWorkDay, ct);
+                        DateTime newLastDate = await _scheduleRequestService.GenerationCycleShiftsAsync(userSchedule, userSchedule.Template.RulesJson, firstWorkDay, lastWorkDay, ct);
                         await _botClient.SendMessage(userSchedule.User.TelegramId, notification.Text + newLastDate.Date.ToShortDateString(), cancellationToken: ct);
                         await _notificationService.MarkNotified(notification.id, ct);
                     }
