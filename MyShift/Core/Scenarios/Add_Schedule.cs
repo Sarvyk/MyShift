@@ -57,17 +57,14 @@ namespace MyShift.Core.Scenarios
             {
                 callbackData.Add(new KeyValuePair<string, string>(template.Name, ToDoItemCallbackDto.FromString($"selectTemplate|{template.Id}").ToString()));
             }
-            await botClient.SendMessage(message.Chat, "Список шаблонов📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showTemplatePageNext||0")), cancellationToken: ct);
+            context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Список шаблонов📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showTemplatePageNext||0")), cancellationToken: ct);
             context.CurrentStep = "NextPage";
             return ScenarioResult.Transition;
         }
         private async Task<ScenarioResult> NextPageWithSelectTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
+            Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
             string callback = context.Data["Callback"].ToString();
-            if(!callback.StartsWith("selectTemplate|") && !callback.StartsWith("showTemplatePageNext|") && !callback.StartsWith("selectedUser|") && !callback.StartsWith("showUserPageNext|"))
-            {
-                return ScenarioResult.Transition;
-            }
             if (callback.StartsWith("selectTemplate|"))
             {
                 context.Data.Add("TemplateId", ToDoItemCallbackDto.FromString(callback).ToDoItemId);
@@ -79,7 +76,7 @@ namespace MyShift.Core.Scenarios
             {
                 callbackData.Add(new KeyValuePair<string, string>(template.Name, ToDoItemCallbackDto.FromString($"selectTemplate|{template.Id}").ToString()));
             }
-            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите шаблон", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{callback}")), cancellationToken: ct);
+            context.Data["currentMessage"] = await botClient.EditMessageText(message.Chat, message.MessageId, "Выберите шаблон", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{callback}")), cancellationToken: ct);
             context.CurrentStep = "NextPage";
             return ScenarioResult.Transition;
         }
@@ -98,17 +95,14 @@ namespace MyShift.Core.Scenarios
             {
                 callbackData.Add(new KeyValuePair<string, string>($"{user.FirstName} {user.LastName}", ToDoItemCallbackDto.FromString($"selectedUser|{user.Id}").ToString()));
             }
-            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
+            context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
             context.CurrentStep = "SelectUser";
             return ScenarioResult.Transition;
         }
         private async Task<ScenarioResult> NextPageWithSelectUser(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
+            Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
             string callback = context.Data["Callback"].ToString();
-            if (!callback.StartsWith("selectedUser|") && !callback.StartsWith("showUserPageNext|"))
-            {
-                return ScenarioResult.Transition;
-            }
             if (callback.StartsWith("selectedUser|"))
             {
                 int templateId = Int32.Parse(context.Data["TemplateId"].ToString());
@@ -121,7 +115,7 @@ namespace MyShift.Core.Scenarios
             {
                 callbackData.Add(new KeyValuePair<string, string>($"{user.FirstName} {user.LastName}", ToDoItemCallbackDto.FromString($"selectedUser|{user.Id}").ToString()));
             }
-            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{callback}")), cancellationToken: ct);
+            context.Data["currentMessage"] = await botClient.EditMessageText(message.Chat, message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{callback}")), cancellationToken: ct);
             context.CurrentStep = "SelectUser";
             return ScenarioResult.Transition;
         }
@@ -138,7 +132,7 @@ namespace MyShift.Core.Scenarios
             userSchedule = new UserSchedule(userId, assignedById.Id, readyTemplate.Id);
             userSchedule = await _scheduleRequestService.InsertScheduleAsync(userSchedule, readyTemplate, ct);
             await botClient.EditMessageText(message.Chat, message.MessageId, "Операция завершена", cancellationToken: ct);
-            await botClient.SendMessage(context.Data["ChatId"].ToString(), "График для пользователя успешно составлен!📅✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(assignedById.Role), cancellationToken: ct);
+            await botClient.SendMessage(message.Chat, "График для пользователя успешно составлен!📅✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(assignedById.Role), cancellationToken: ct);
             await botClient.SendMessage(userSchedule.User.TelegramId, $"{userSchedule.User.FirstName}, для вас создан {(userSchedule.Template.Type == 0?"линейный":"цикличный")} график с {userSchedule.StartDate.ToShortDateString()} по {userSchedule.EndDate.ToShortDateString()}.", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
