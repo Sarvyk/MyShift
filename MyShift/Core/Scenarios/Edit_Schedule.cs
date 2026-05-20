@@ -243,9 +243,9 @@ namespace MyShift.Core.Scenarios
                     return ScenarioResult.Transition;
                 case "EnterMessage":
                     int requestId = Int32.Parse(context.Data["TakeRequest"].ToString());
-                    user = await _userService.GetUserByTelegramIdAsync(message.From.Id, ct);
+                    user = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
                     Request request = await _scheduleRequestService.RejectRequestAsync(requestId, user.Id, message.Text, ct);
-                    await botClient.SendMessage(message.From.Id, "Заявка отклонена", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat.Id, "Заявка отклонена", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
                     await botClient.SendMessage(request.Creator.TelegramId, $"Ваша заявка отклонена. Причина:\r\n---{message.Text}---", cancellationToken: ct);
                     break;
             }
