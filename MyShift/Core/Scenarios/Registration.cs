@@ -52,10 +52,12 @@ namespace MyShift.Core.Scenarios
                     return ScenarioResult.Transition;
                 case "SelectedRole":
                     Role role = (Role)Int32.Parse(context.Data["Callback"].ToString());
-                    await _userService.SetRole(Int32.Parse(context.Data["userId"].ToString()), role, ct);
+                    int userRegId = Int32.Parse(context.Data["userId"].ToString());
+                    ToDoUser userRegistration = await _userService.GetUserAsync(userRegId, ct);
+                    await _userService.SetRole(userRegistration.Id, role, ct);
                     await botClient.SendMessage(message.Chat, $"Пользователелю выдана роль \"{role.GetDisplayName()}\" успешно добавлен.", cancellationToken: ct);
-                    await botClient.SendMessage(Int32.Parse(context.Data["TelegramUserId"].ToString()), $"Ваша регистрация завершена. Вам выдана роль \"{role.GetDisplayName()}\"", replyMarkup:MarkupManager.SetStandartKeyboardButtonList(role), cancellationToken: ct);
-                    MarkupManager.SetCommand(botClient, role, long.Parse(context.Data["userId"].ToString()), ct);
+                    await botClient.SendMessage(userRegistration.TelegramId, $"Ваша регистрация завершена. Вам выдана роль \"{role.GetDisplayName()}\"", replyMarkup:MarkupManager.SetStandartKeyboardButtonList(role), cancellationToken: ct);
+                    MarkupManager.SetCommand(botClient, role, userRegistration.TelegramId, ct);
                     break;
             }
             return ScenarioResult.Completed;

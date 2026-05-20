@@ -180,7 +180,7 @@ namespace MyShift
                     context.Data.Add("userRole", (int)(await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Role);
                     // Введём этот элемент, чтобы внутри сценария понимать, что этот сценарий от запроса идёт.
                     context.Data.Add("TakeRequest", ToDoItemCallbackDto.FromString(a.Data).ToDoItemId);
-                    context.CurrentStep = "selectUser";
+                    context.CurrentStep = "NextPage";
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
