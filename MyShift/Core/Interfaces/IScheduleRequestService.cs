@@ -10,7 +10,7 @@ namespace MyShift.Core.Interfaces
     public interface IScheduleRequestService
     {
         Task InsertRequestAsync(int userId, string message, CancellationToken ct);
-        Task InsertScheduleAsync(UserSchedule schedules, ScheduleTemplate template,CancellationToken ct);
+        Task<UserSchedule> InsertScheduleAsync(UserSchedule schedules, ScheduleTemplate template,CancellationToken ct);
         Task InsertScheduleTemplateAsync(ScheduleTemplate sch_template, CancellationToken ct);
         Task<ScheduleTemplate?> GetTemplateAsync(int templateId, CancellationToken ct);
         Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct);

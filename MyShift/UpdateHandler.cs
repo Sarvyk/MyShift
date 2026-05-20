@@ -61,8 +61,8 @@ namespace MyShift
             }
             catch (FormatException ex)
             {
-                await botClient.SendMessage(message.Chat, ex.Message, replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
-                await _scenarioContextRepository.ResetContext((update.Message != null) ? update.Message.From.Id : update.CallbackQuery.From.Id, ct);
+                await botClient.SendMessage(message.Chat, ex.Message, cancellationToken: ct);
+                //await _scenarioContextRepository.ResetContext((update.Message != null) ? update.Message.From.Id : update.CallbackQuery.From.Id, ct);
             }
             catch (Exception ex)
             {

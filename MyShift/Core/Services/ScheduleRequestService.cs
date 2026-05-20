@@ -22,7 +22,7 @@ namespace MyShift.Core.Services
             Request request = new Request(userId, message);
             await _requestRepository.InsertRequestAsync(request,ct);
         }
-        public async Task InsertScheduleAsync(UserSchedule schedule, ScheduleTemplate template, CancellationToken ct)
+        public async Task<UserSchedule> InsertScheduleAsync(UserSchedule schedule, ScheduleTemplate template, CancellationToken ct)
         {
             if (template.Type == 0)
             {
@@ -37,7 +37,6 @@ namespace MyShift.Core.Services
                 schedule.EndDate = firstWorkDay.AddMonths(template.SchedulePeriod);
                 await _scheduleRepository.InsertScheduleAsync(schedule, ct);
                 await GenerationDayShifts(schedule, template.RulesJson, firstWorkDay, schedule.EndDate, ct);
-                
             }
             else if (template.Type == 1)
             {
@@ -46,6 +45,7 @@ namespace MyShift.Core.Services
                 await _scheduleRepository.InsertScheduleAsync(schedule, ct);
                 await GenerationCycleShifts(schedule, template.RulesJson, schedule.StartDate, schedule.EndDate, ct);
             }
+            return await _scheduleRepository.GetActiveScheduleByUserAsync(schedule.UserId, ct);
         }
         public async Task<IReadOnlyList<ScheduleTemplate>> GetAllTemplatesAsync(CancellationToken ct)
         {

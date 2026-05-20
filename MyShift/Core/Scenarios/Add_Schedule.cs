@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Core.Enums;
 using MyShift.Core.Helpers;
 using MyShift.Core.Interfaces;
 using MyShift.Core.Models;
@@ -27,73 +28,118 @@ namespace MyShift.Core.Scenarios
         public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Add_Schedule;
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
-        {//как-то мне не очень нравится этот вариант решения. Попозже возможно вернусь к этому кусочку
-            Role roleCurrentUser = (Role)Int32.Parse(context.Data["userRole"].ToString());
-            if (!context.Data.ContainsKey("Template"))
+        {
+            ScenarioResult result = ScenarioResult.Transition;
+            switch (context.CurrentStep)
             {
-                if (!context.Data["Callback"].ToString().Contains("selectedTemplate"))
-                {
-                    IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplatesAsync(ct);
-                    if (templates.Count == 0)
-                    {
-                        await botClient.SendMessage(message.Chat, "Действующие шаблоны не найдены!🔍❌", cancellationToken: ct);
-                        return ScenarioResult.Completed;
-                    }
-                    var callbackData = new List<KeyValuePair<string, string>>();
-                    foreach (ScheduleTemplate template in templates)
-                    {
-                        callbackData.Add(new KeyValuePair<string, string>(template.Name, ToDoItemCallbackDto.FromString($"selectedTemplate|{template.Id}").ToString()));
-                    }
-                    await botClient.SendMessage(message.Chat, "Процесс создания графика", replyMarkup:MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
-                    if (context.Data["Callback"].ToString() == "")
-                    {
-                        await botClient.SendMessage(message.Chat, "Выберите шаблон📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showTemplate||0")), cancellationToken: ct);
-                        return ScenarioResult.Transition;
-                    }
-                    else if (context.Data["Callback"].ToString().Contains("showTemplate"))
-                    {
-                        await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите шаблон", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{context.Data["Callback"].ToString()}")), cancellationToken: ct);
-                        return ScenarioResult.Transition;
-                    }
-                }
-                context.Data.Add("Template", await _scheduleRequestService.GetTemplateAsync(ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId, ct));
-                context.Data["Callback"] = string.Empty;
+                case null:
+                    return await ShowTemplate(botClient, context, message, ct);
+                case "NextPage":
+                    return await NextPageWithSelectTemplate(botClient, context, message, ct);
+                case "SelectUser":
+                    result = await NextPageWithSelectUser(botClient, context, message, ct);
+                    break;
             }
-            if (!context.Data.ContainsKey("userId"))
+            return result;
+        }
+        private async Task<ScenarioResult> ShowTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
+        {
+            string callback = context.Data["Callback"].ToString();
+            IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplatesAsync(ct);
+            if (templates.Count == 0)
             {
-                if (!context.Data["Callback"].ToString().Contains("selectedUser"))
-                {
-                    IReadOnlyList<ToDoUser> users = await _userService.GetAllUsers(ct);
-                    var callbackData = new List<KeyValuePair<string, string>>();
-                    foreach (ToDoUser user in users)
-                    {
-                        callbackData.Add(new KeyValuePair<string, string>($"{user.FirstName} {user.LastName}", ToDoItemCallbackDto.FromString($"selectedUser|{user.Id}").ToString()));
-                    }
-                    if (context.Data["Callback"] == "")
-                    {
-                        await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUser||0")), cancellationToken: ct);
-                        return ScenarioResult.Transition;
-                    }
-                    else if (context.Data["Callback"].ToString().Contains("showUser"))
-                    {
-                        await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{context.Data["Callback"].ToString()}")), cancellationToken: ct);
-                        return ScenarioResult.Transition;
-                    }
-                }
-                context.Data.Add("userId", context.Data["Callback"].ToString());
-            }
-
-            int userId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
-            if((await _scheduleRequestService.GetActiveScheduleByUserAsync(userId,ct)) != null)
-            {
-                await botClient.SendMessage(context.Data["ChatId"].ToString(), "У этого пользователя уже есть активный график!👤📅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+                await botClient.SendMessage(message.Chat, "Действующие шаблоны не найдены!🔍❌", cancellationToken: ct);
                 return ScenarioResult.Completed;
             }
-            int assignedById = (await _userService.GetUserByTelegramIdAsync(long.Parse(context.Data["TelegramUserId"].ToString()), ct)).Id;
-            ScheduleTemplate readyTemplate = (ScheduleTemplate)context.Data["Template"];
-            UserSchedule userSchedule = new UserSchedule(userId, assignedById, readyTemplate.Id);
-            await _scheduleRequestService.InsertScheduleAsync(userSchedule, readyTemplate, ct);
-            await botClient.SendMessage(context.Data["ChatId"].ToString(), "График для пользователя успешно составлен!📅✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
+            var callbackData = new List<KeyValuePair<string, string>>();
+            await botClient.SendMessage(message.Chat, "Процесс создания шаблона📋", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
+            foreach (ScheduleTemplate template in templates)
+            {
+                callbackData.Add(new KeyValuePair<string, string>(template.Name, ToDoItemCallbackDto.FromString($"selectTemplate|{template.Id}").ToString()));
+            }
+            await botClient.SendMessage(message.Chat, "Список шаблонов📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showTemplatePageNext||0")), cancellationToken: ct);
+            context.CurrentStep = "NextPage";
+            return ScenarioResult.Transition;
+        }
+        private async Task<ScenarioResult> NextPageWithSelectTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
+        {
+            string callback = context.Data["Callback"].ToString();
+            if(!callback.StartsWith("selectTemplate|") && !callback.StartsWith("showTemplatePageNext|") && !callback.StartsWith("selectedUser|") && !callback.StartsWith("showUserPageNext|"))
+            {
+                return ScenarioResult.Transition;
+            }
+            if (callback.StartsWith("selectTemplate|"))
+            {
+                context.Data.Add("TemplateId", ToDoItemCallbackDto.FromString(callback).ToDoItemId);
+                return await ShowUser(botClient, context, message, ct);
+            }
+            IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplatesAsync(ct);
+            var callbackData = new List<KeyValuePair<string, string>>();
+            foreach (ScheduleTemplate template in templates)
+            {
+                callbackData.Add(new KeyValuePair<string, string>(template.Name, ToDoItemCallbackDto.FromString($"selectTemplate|{template.Id}").ToString()));
+            }
+            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите шаблон", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{callback}")), cancellationToken: ct);
+            context.CurrentStep = "NextPage";
+            return ScenarioResult.Transition;
+        }
+        private async Task<ScenarioResult> ShowUser(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
+        {
+            string callback = context.Data["Callback"].ToString();
+            if (callback.StartsWith("selectedUser|"))
+            {
+                int templateId = Int32.Parse(context.Data["TemplateId"].ToString());
+                int userId = ToDoItemCallbackDto.FromString(callback).ToDoItemId;
+                return await CreateScheduleForUser(botClient, context, message, templateId, userId, ct);
+            }
+            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsers(ct);
+            var callbackData = new List<KeyValuePair<string, string>>();
+            foreach (ToDoUser user in users)
+            {
+                callbackData.Add(new KeyValuePair<string, string>($"{user.FirstName} {user.LastName}", ToDoItemCallbackDto.FromString($"selectedUser|{user.Id}").ToString()));
+            }
+            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
+            context.CurrentStep = "SelectUser";
+            return ScenarioResult.Transition;
+        }
+        private async Task<ScenarioResult> NextPageWithSelectUser(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
+        {
+            string callback = context.Data["Callback"].ToString();
+            if (!callback.StartsWith("selectedUser|") && !callback.StartsWith("showUserPageNext|"))
+            {
+                return ScenarioResult.Transition;
+            }
+            if (callback.StartsWith("selectedUser|"))
+            {
+                int templateId = Int32.Parse(context.Data["TemplateId"].ToString());
+                int userId = ToDoItemCallbackDto.FromString(callback).ToDoItemId;
+                return await CreateScheduleForUser(botClient, context, message, templateId, userId, ct);
+            }
+            IReadOnlyList<ToDoUser> users = await _userService.GetAllUsers(ct);
+            var callbackData = new List<KeyValuePair<string, string>>();
+            foreach (ToDoUser user in users)
+            {
+                callbackData.Add(new KeyValuePair<string, string>($"{user.FirstName} {user.LastName}", ToDoItemCallbackDto.FromString($"selectedUser|{user.Id}").ToString()));
+            }
+            await botClient.EditMessageText(context.Data["ChatId"].ToString(), message.MessageId, "Выберите пользователя👥", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString($"{callback}")), cancellationToken: ct);
+            context.CurrentStep = "SelectUser";
+            return ScenarioResult.Transition;
+        }
+        private async Task<ScenarioResult> CreateScheduleForUser(ITelegramBotClient botClient, ScenarioContext context, Message message, int templateId, int userId, CancellationToken ct)
+        {
+            UserSchedule? userSchedule = await _scheduleRequestService.GetActiveScheduleByUserAsync(userId, ct);
+            if (userSchedule != null)
+            {
+                await botClient.SendMessage(userSchedule.User.TelegramId, "У этого пользователя уже есть активный график!👤📅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(userSchedule.User.Role), cancellationToken: ct);
+                return ScenarioResult.Completed;
+            }
+            ToDoUser assignedById = await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct);
+            ScheduleTemplate readyTemplate = await _scheduleRequestService.GetTemplateAsync(templateId, ct);
+            userSchedule = new UserSchedule(userId, assignedById.Id, readyTemplate.Id);
+            userSchedule = await _scheduleRequestService.InsertScheduleAsync(userSchedule, readyTemplate, ct);
+            await botClient.EditMessageText(message.Chat, message.MessageId, "Операция завершена", cancellationToken: ct);
+            await botClient.SendMessage(context.Data["ChatId"].ToString(), "График для пользователя успешно составлен!📅✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(assignedById.Role), cancellationToken: ct);
+            await botClient.SendMessage(userSchedule.User.TelegramId, $"{userSchedule.User.FirstName}, для вас создан {(userSchedule.Template.Type == 0?"линейный":"цикличный")} график с {userSchedule.StartDate.ToShortDateString()} по {userSchedule.EndDate.ToShortDateString()}.", cancellationToken: ct);
             return ScenarioResult.Completed;
         }
     }
