@@ -32,10 +32,11 @@ namespace MyShift.Core.Scenarios
             {
                 case null:
                     context.Data.Add("requestId", context.Data["Callback"]);
-                    await botClient.SendMessage(message.Chat, "Введите причину отказа для пользователя", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
+                    context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Введите причину отказа для пользователя", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     context.CurrentStep = "EnterMessage";
                     return ScenarioResult.Transition;
                 case "EnterMessage":
+                    Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 1);
                     int requestId = Int32.Parse(context.Data["requestId"].ToString());
                     string messageToUser = message.Text;
                     ToDoUser user = await _userService.GetUserByTelegramIdAsync(message.From.Id, ct);

@@ -24,6 +24,11 @@ namespace MyShift.Core.Scenarios
             switch (context.CurrentStep)
             {
                 case null:
+                    if(await _scheduleRequestService.GetActiveScheduleByUserAsync((await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct)).Id, ct) == null)
+                    {
+                        await botClient.SendMessage(message.Chat, "У вас отсутствует активный график работы для изменений📋", cancellationToken: ct);
+                        return ScenarioResult.Completed;
+                    }
                     context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Опишите причину заявки✍️", replyMarkup:MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     context.CurrentStep = "Reason";
                     return ScenarioResult.Transition;

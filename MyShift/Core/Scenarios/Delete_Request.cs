@@ -35,10 +35,11 @@ namespace MyShift.Core.Scenarios
                     int requestId = ToDoItemCallbackDto.FromString(context.Data["Callback"].ToString()).ToDoItemId;
                     context.Data.Add("RequestId", requestId);
                     await botClient.SendMessage(message.Chat, "Процесс удаления заявки", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
-                    await botClient.SendMessage(message.Chat, $"Подтверждаете удаление заявки❓", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("✅Да", "yes"), new InlineKeyboardButton("❌Нет", "no")), cancellationToken: ct);
+                    context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, $"Подтверждаете удаление заявки❓", replyMarkup: new InlineKeyboardMarkup(new InlineKeyboardButton("✅Да", "yes"), new InlineKeyboardButton("❌Нет", "no")), cancellationToken: ct);
                     context.CurrentStep = "Approve";
                     return ScenarioResult.Transition;
                 case "Approve":
+                    Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
                     if (context.Data["Callback"].ToString() == "no")
                     {
                         await botClient.SendMessage(message.Chat, $"Удаление отменено↩️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
