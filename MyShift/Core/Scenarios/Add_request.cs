@@ -24,16 +24,11 @@ namespace MyShift.Core.Scenarios
             switch (context.CurrentStep)
             {
                 case null:
-                    await botClient.SendMessage(message.Chat, "Опишите причину заявки✍️", replyMarkup:MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
+                    context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Опишите причину заявки✍️", replyMarkup:MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
                     context.CurrentStep = "Reason";
                     return ScenarioResult.Transition;
                 case "Reason":
-                    if (context.Data.ContainsKey("Callback"))
-                    {
-                        context.Data.Remove("Callback");
-                        await botClient.SendMessage(message.Chat, "Принимается только текст. Опишите причину заявки!", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
-                        return ScenarioResult.Transition;
-                    }
+                    Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 1);
                     ToDoUser currentUser = await _userService.GetUserByTelegramIdAsync(message.From.Id, ct);
                     await _scheduleRequestService.InsertRequestAsync(currentUser.Id, message.Text, ct);
                     await botClient.SendMessage(message.Chat, $"{currentUser.FirstName}, Заявка добавлена.✅ Ожидайте ответа", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
