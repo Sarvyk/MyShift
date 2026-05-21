@@ -1,14 +1,16 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Telegram.Bot.Requests.Abstractions;
 using Telegram.Bot.Types;
 
 namespace MyShift.Core.Models
-{//График пользователя.
+{
     public class UserSchedule
     {
         public int Id { get; set; }

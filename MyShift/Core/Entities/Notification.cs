@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace MyShift.Core.Entities
 {
+    [Index(nameof(Type), Name = "idx_Notification_Type")]
     public class Notification
     {
         public int id { get; set; }

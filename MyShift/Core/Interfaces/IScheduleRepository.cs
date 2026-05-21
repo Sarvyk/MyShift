@@ -12,7 +12,6 @@ namespace MyShift.Core.Interfaces
     public interface IScheduleRepository
     {
         Task<UserSchedule?> InsertScheduleAsync(UserSchedule schedule, CancellationToken ct);
-        Task InsertSchedule_TemplateAsync(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct);
         Task InstertShiftsAsync(List<Shift> shifts, CancellationToken ct);
         Task<UserSchedule?> GetScheduleAsync(int scheduleId, CancellationToken ct);
         Task<UserSchedule?> GetActiveScheduleByUserAsync(int userId, CancellationToken ct);

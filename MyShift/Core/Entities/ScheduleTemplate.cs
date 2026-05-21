@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace MyShift.Core.Models
 {
+    [Index(nameof(Type), Name = "idx_ScheduleTemplate_Type")]
     public class ScheduleTemplate
     {//Данная таблица будет содержать шаблон графика, к которому будут привязаны другие графики из Schedule.cs
         public int Id { get; set; }

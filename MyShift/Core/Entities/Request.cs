@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace MyShift.Core.Models
 {
+    [Index(nameof(Status), Name = "idx_Request_Status")]
     public class Request
     {//Тут заявка
         public int Id { get; set; }

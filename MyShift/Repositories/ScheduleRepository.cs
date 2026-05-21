@@ -32,13 +32,6 @@ namespace MyShift.Repositories
             await context.SaveChangesAsync(ct);
         }
 
-        public async Task InsertSchedule_TemplateAsync(ScheduleTemplate_Schedule templ_schedule, CancellationToken ct)
-        {
-            using var context = _dbFactory.CreateDbContext();
-            await context.AddAsync(templ_schedule, ct);
-            await context.SaveChangesAsync(ct);
-        }
-
         public async Task InstertShiftsAsync(List<Shift> shifts, CancellationToken ct)
         {
             using var context = _dbFactory.CreateDbContext();

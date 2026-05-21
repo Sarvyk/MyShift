@@ -1,4 +1,5 @@
-﻿using MyShift.Core.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace MyShift.Core.Models
 {
+    [Index(nameof(UserScheduleId), Name = "idx_Shift_UserScheduleId")]
     public class Shift
     {
         public int Id { get; set; }
