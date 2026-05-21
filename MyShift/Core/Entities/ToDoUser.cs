@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MyShift.Core.Models
 {
-    [Index(nameof(Id), Name = "uq_ToDoUser_Id")]
+    [Index(nameof(Id), IsUnique = true, Name = "uq_ToDoUser_Id")]
     public class ToDoUser
     {
         public int Id { get; set; }
