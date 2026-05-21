@@ -12,10 +12,10 @@ namespace MyShift.Core.Models
     {//Тут заявка
         public int Id { get; set; }
         public string Message { get; set; }
-        public RequestStatus Status { get; set; } // Enum: Pending, Approved, Rejected
+        public RequestStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public string? ResolutionComment { get; set; } // Комментарий при обработке
+        public string? ResolutionComment { get; set; }
 
         // Связь с создателем
         public int CreatorId { get; set; }
@@ -23,7 +23,7 @@ namespace MyShift.Core.Models
         public ToDoUser Creator { get; set; }
 
         // Связь с обработавшим (админ/модератор)
-        public int? ProcessorId { get; set; }  // Nullable - может быть не обработана
+        public int? ProcessorId { get; set; }
         [ForeignKey("ProcessorId")]
         public ToDoUser? Processor { get; set; }
         public Request() { }

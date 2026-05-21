@@ -14,9 +14,9 @@ namespace MyShift.Core.Models
         public DateTime RegisteredAt { get; set; }
         public Role Role { get; set; }
         [InverseProperty("Creator")]
-        public List<Request> CreatedRequests { get; set; } = new(); // Заявки пользователя
+        public List<Request> CreatedRequests { get; set; } = new();
         [InverseProperty("Processor")]
-        public List<Request> ProcessedRequests { get; set; } = new(); // Обработанные заявки
+        public List<Request> ProcessedRequests { get; set; } = new();
         public ToDoUser(long chatId,long telegramId, string? userName, string? firstName, string? lastName)
         {
             ChatId = chatId;
