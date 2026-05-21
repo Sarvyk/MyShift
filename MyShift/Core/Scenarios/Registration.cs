@@ -47,10 +47,12 @@ namespace MyShift.Core.Scenarios
                             keyboardButtons = new InlineKeyboardButton[maxInRow];
                         }
                     }
-                    await botClient.EditMessageText(message.Chat, message.MessageId, "Выберите роль", replyMarkup: inlineKeyboard, cancellationToken: ct);
+                    await botClient.SendMessage(message.Chat, "Процесс регистрации нового пользователя", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
+                    context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Выберите роль", replyMarkup: inlineKeyboard, cancellationToken: ct);
                     context.CurrentStep = "SelectedRole";
                     return ScenarioResult.Transition;
                 case "SelectedRole":
+                    Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
                     Role role = (Role)Int32.Parse(context.Data["Callback"].ToString());
                     int userRegId = Int32.Parse(context.Data["userId"].ToString());
                     ToDoUser userRegistration = await _userService.GetUserAsync(userRegId, ct);

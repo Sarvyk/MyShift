@@ -105,12 +105,22 @@ namespace MyShift.Core.Helpers
                 case Role.User:
                     replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
                     {
-                        new KeyboardButton("/schedule📋"),
-                        new KeyboardButton("/add_request✍️"),
-                        new KeyboardButton("/requests📋")
+                        new KeyboardButton("/schedule"),
+                        new KeyboardButton("/add_request"),
+                        new KeyboardButton("/requests")
                     });
                     return replyKeyboardMarkup;
                 case Role.Operator:
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/edit_schedule"),
+                        new KeyboardButton("/schedule"),
+                    });
+                    replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
+                    {
+                        new KeyboardButton("/add_request"),
+                        new KeyboardButton("/requests")
+                    });
                     return replyKeyboardMarkup;
                 case Role.Administrator:
                     replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
@@ -146,7 +156,7 @@ namespace MyShift.Core.Helpers
                     replyKeyboardMarkup.AddNewRow(new KeyboardButton[]
                     {
                         new KeyboardButton("/start▶️"),
-                        new KeyboardButton("/help🆘")
+                        new KeyboardButton("/help")
                     });
                     return replyKeyboardMarkup;
             }

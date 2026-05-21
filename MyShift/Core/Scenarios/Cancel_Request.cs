@@ -42,7 +42,7 @@ namespace MyShift.Core.Scenarios
                     ToDoUser user = await _userService.GetUserByTelegramIdAsync(message.From.Id, ct);
                     Request request = await _scheduleRequestService.RejectRequestAsync(requestId, user.Id, messageToUser, ct);
                     await botClient.SendMessage(message.From.Id, "Заявка отклонена", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(user.Role), cancellationToken: ct);
-                    await botClient.SendMessage(request.Creator.TelegramId, $"Ваша заявка отклонена. Причина:\r\n---{messageToUser}---", cancellationToken:ct);
+                    await botClient.SendMessage(request.Creator.TelegramId, $"Ваша заявка \"#{request.Id} - {request.Message}\" отклонена. Причина:\r\n---{messageToUser}---", cancellationToken:ct);
                     break;
             }
             return ScenarioResult.Completed;

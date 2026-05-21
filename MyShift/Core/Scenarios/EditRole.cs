@@ -90,7 +90,7 @@ namespace MyShift.Core.Scenarios
                     Role roleResult = (Role)Int32.Parse(callback);
                     await _userService.SetRoleAsync(userEditRole.Id, roleResult, ct);
                     await botClient.SendMessage(message.Chat, $"Роль у пользователя \"{userEditRole.Id}\" успешно изменена на\r\n\"{roleResult.GetDisplayName()}\"✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
-                    await botClient.SendMessage(userEditRole.TelegramId, $"Ваша роль изменена на {roleResult.GetDisplayName()}",cancellationToken:ct);
+                    await botClient.SendMessage(userEditRole.TelegramId, $"Ваша роль изменена на {roleResult.GetDisplayName()}", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleResult),cancellationToken:ct);
                     MarkupManager.SetCommand(botClient, roleResult, message.Chat, ct);
                     break;
             }

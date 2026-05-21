@@ -210,11 +210,13 @@ namespace MyShift
                     }
                     await _scheduleRequestService.SetProcessorAsync(ToDoItemCallbackDto.FromString(a.Data).ToDoItemId, (await _userService.GetUserByTelegramIdAsync(update.CallbackQuery.From.Id, ct)).Id, ct);
                     context = new ScenarioContext(ScenarioType.Cancel_Request);
+                    context.Data.Add("Callback", ToDoItemCallbackDto.FromString(a.Data).ToDoItemId);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
                 case CallbackQuery a when a.Data.StartsWith("register|"):
                     context = new ScenarioContext(ScenarioType.Registration);
+                    context.Data.Add("userId",ToDoItemCallbackDto.FromString(a.Data).ToDoItemId);
                     await _scenarioContextRepository.SetContext(update.CallbackQuery.From.Id, context, ct);
                     await ProcessScenario(botClient, context, update.CallbackQuery.From, update.CallbackQuery.Message, ct);
                     break;
@@ -394,7 +396,7 @@ namespace MyShift
                 var staffs = await _userService.GetStaffAsync(ct);
                 foreach(ToDoUser user in staffs)
                 {
-                    await botClient.SendMessage(user.TelegramId, "Новый пользователь зашёл в бот.", 
+                    await botClient.SendMessage(user.TelegramId, $"Новый пользователь {toDoUser.FirstName} зашёл в бот.",
                         replyMarkup:new InlineKeyboardMarkup().AddButton(new InlineKeyboardButton("Зарегистрировать", ToDoItemCallbackDto.FromString($"register|{toDoUser.Id}").ToString())), cancellationToken: ct);
                 }
                 await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот👋🏻🤖 \"Мой график\"📋! Заявка на регистрацию отправлена.", cancellationToken: ct);

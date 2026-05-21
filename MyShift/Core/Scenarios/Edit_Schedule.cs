@@ -316,7 +316,6 @@ namespace MyShift.Core.Scenarios
             {
                 callbackData.Add(new KeyValuePair<string, string>($"{userSchedule.User.Id}){userSchedule.User.FirstName} {userSchedule.User.LastName}", ToDoItemCallbackDto.FromString($"showUser|{userSchedule.User.Id}").ToString()));
             }
-            await botClient.SendMessage(message.Chat, "Процесс редактировани графика", replyMarkup: MarkupManager.SetKeyboardCancel(), cancellationToken: ct);
             context.Data["currentMessage"] = await botClient.SendMessage(message.Chat, "Выберите пользователя.📋", replyMarkup: PageBuilder.BuildPagedButtons(callbackData, PagedListCallbackDto.FromString("showUserPageNext||0")), cancellationToken: ct);
             context.CurrentStep = "NextPage";
             return ScenarioResult.Transition;

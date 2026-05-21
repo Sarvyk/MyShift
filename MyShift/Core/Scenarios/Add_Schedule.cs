@@ -52,7 +52,6 @@ namespace MyShift.Core.Scenarios
         /// <returns></returns>
         private async Task<ScenarioResult> ShowTemplate(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
-            string callback = context.Data["Callback"].ToString();
             IReadOnlyList<ScheduleTemplate> templates = await _scheduleRequestService.GetAllTemplatesAsync(ct);
             if (templates.Count == 0)
             {
