@@ -8,7 +8,7 @@ using MyShift.Core.Scenarios;
 using MyShift.Core.Scenarios.Interfaces;
 using MyShift.Core.Services;
 using MyShift.Infrastructure;
-using MyShift.Repositories;
+using MyShift.Infrastructure.Repositories;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
