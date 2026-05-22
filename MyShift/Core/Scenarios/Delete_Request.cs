@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MyShift.Core.Entities;
 using MyShift.Core.Enums;
 using MyShift.Core.Helpers;
 using MyShift.Core.Interfaces;
@@ -21,10 +22,13 @@ namespace MyShift.Core.Scenarios
     {
         private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        public Delete_Request(IUserService userService, IScheduleRequestService scheduleRequestService)
+        private readonly INotificationService _notificationService;
+
+        public Delete_Request(IUserService userService, IScheduleRequestService scheduleRequestService, INotificationService notificationService)
         {
             _userService = userService;
             _scheduleRequestService = scheduleRequestService;
+            _notificationService = notificationService;
         }
         public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Delete_Request;
 
@@ -48,7 +52,11 @@ namespace MyShift.Core.Scenarios
                         await botClient.SendMessage(message.Chat, $"Удаление отменено↩️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
                         return ScenarioResult.Completed;
                     }
-                    await _scheduleRequestService.DeleteRequestAsync(Int32.Parse(context.Data["RequestId"].ToString()), ct);
+                    Request deletingRequest = await _scheduleRequestService.GetRequestAsync(Int32.Parse(context.Data["RequestId"].ToString()), ct);
+                    Notification? notification = await _notificationService.GetNotificationByUserIdAndType(deletingRequest.CreatorId, $"Request_{deletingRequest.Id}", ct);
+                    if(notification != null)
+                        await _scheduleRequestService.DeleteRequestAsync(deletingRequest.Id, ct);
+                    await _notificationService.MarkNotified(notification.id, ct);
                     break;
             }
             await botClient.SendMessage(message.Chat, $"Заявка удалена🗑️✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
