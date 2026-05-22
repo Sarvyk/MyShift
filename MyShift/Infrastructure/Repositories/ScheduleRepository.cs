@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyShift.Repositories
+namespace MyShift.Infrastructure.Repositories
 {
     internal class ScheduleRepository : IScheduleRepository
     {
