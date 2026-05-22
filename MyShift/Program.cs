@@ -34,10 +34,10 @@ namespace MyShift
             var scenarios = new List<IScenario>()
                 {
                     new Add_Request(userService, scheduleRequestService),
-                    new Delete_Request(scheduleRequestService),
+                    new Delete_Request(userService, scheduleRequestService),
                     new Add_Template(userService, scheduleRequestService),
                     new Add_Schedule(userService, scheduleRequestService),
-                    new Edit_Schedule(userService, scheduleRequestService),
+                    new Edit_Schedule(userService, scheduleRequestService, notificationService),
                     new EditRole(userService, scheduleRequestService),
                     new Registration(userService),
                     new Cancel_Request(userService,scheduleRequestService)

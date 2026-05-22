@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using MyShift.Core.Entities;
 using MyShift.Core.Enums;
 using MyShift.Core.Extensions;
 using MyShift.Core.Helpers;
@@ -25,10 +26,13 @@ namespace MyShift.Core.Scenarios
     {
         private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        public Edit_Schedule(IUserService userService, IScheduleRequestService scheduleRequestService)
+        private readonly INotificationService _notificationService;
+
+        public Edit_Schedule(IUserService userService, IScheduleRequestService scheduleRequestService, INotificationService notificationService)
         {
             _userService = userService;
             _scheduleRequestService = scheduleRequestService;
+            _notificationService = notificationService;
         }
         public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Edit_Schedule;
 
@@ -101,6 +105,9 @@ namespace MyShift.Core.Scenarios
             else if (context.Data["Callback"].ToString() == "yes")
             {
                 UserSchedule deletedUserSchedule = await _scheduleRequestService.DeleteScheduleByScheduleIdAsync(Int32.Parse(context.Data["scheduleId"].ToString()), ct);
+                Notification? notification = await _notificationService.GetNotificationByUserIdAndType(deletedUserSchedule.User.Id, $"ScheduleExtension_{deletedUserSchedule.Id}", ct);
+                if(notification != null)
+                    await _notificationService.MarkNotified(notification.id, ct);
                 await botClient.SendMessage(message.Chat, "Выбранный график удалён✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(currentUser.Role), cancellationToken: ct);
                 await botClient.SendMessage(deletedUserSchedule.User.TelegramId, $"{StartMessageRequest(context.Data.ContainsKey("TakeRequest"))}Ваш график был удалён", cancellationToken: ct);
                 if (context.Data.ContainsKey("TakeRequest"))

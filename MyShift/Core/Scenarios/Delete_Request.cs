@@ -19,16 +19,18 @@ namespace MyShift.Core.Scenarios
 {
     internal class Delete_Request : IScenario
     {
+        private readonly IUserService _userService;
         private readonly IScheduleRequestService _scheduleRequestService;
-        public Delete_Request(IScheduleRequestService scheduleRequestService)
+        public Delete_Request(IUserService userService, IScheduleRequestService scheduleRequestService)
         {
+            _userService = userService;
             _scheduleRequestService = scheduleRequestService;
         }
         public bool CanHandle(ScenarioType scenario) => scenario == ScenarioType.Delete_Request;
 
         public async Task<ScenarioResult> HandleMessageAsync(ITelegramBotClient botClient, ScenarioContext context, Message message, CancellationToken ct)
         {
-            Role roleCurrentUser = (Role)Int32.Parse(context.Data["userRole"].ToString());
+            Role roleCurrentUser = Role.None;
             switch (context.CurrentStep)
             {
                 case null:
@@ -40,6 +42,7 @@ namespace MyShift.Core.Scenarios
                     return ScenarioResult.Transition;
                 case "Approve":
                     Validator.ValidateCurrentMessage((Message)context.Data["currentMessage"], message, 0);
+                    roleCurrentUser = (await _userService.GetUserByTelegramIdAsync(message.Chat.Id, ct)).Role;
                     if (context.Data["Callback"].ToString() == "no")
                     {
                         await botClient.SendMessage(message.Chat, $"Удаление отменено↩️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);

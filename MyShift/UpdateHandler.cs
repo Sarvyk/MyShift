@@ -387,7 +387,7 @@ namespace MyShift
             ToDoUser? toDoUser = await _userService.GetUserByTelegramIdAsync(update.Message.From.Id, ct);
             if (toDoUser != null)
             {
-                await botClient.SendMessage(update.Message.Chat, "Бот уже запущен!⚠️", cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, "Бот уже запущен!⚠️", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(toDoUser.Role), cancellationToken: ct);
             }
             else
             {
@@ -398,7 +398,7 @@ namespace MyShift
                     await botClient.SendMessage(user.TelegramId, $"Новый пользователь {toDoUser.FirstName} зашёл в бот.",
                         replyMarkup:new InlineKeyboardMarkup().AddButton(new InlineKeyboardButton("Зарегистрировать", ToDoItemCallbackDto.FromString($"register|{toDoUser.Id}").ToString())), cancellationToken: ct);
                 }
-                await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот👋🏻🤖 \"Мой график\"📋! Заявка на регистрацию отправлена.", cancellationToken: ct);
+                await botClient.SendMessage(update.Message.Chat, $"{toDoUser.FirstName}, добро пожаловать в бот👋🏻🤖 \"Мой график\"📋! Заявка на регистрацию отправлена.", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(toDoUser.Role), cancellationToken: ct);
             }
             MarkupManager.SetCommand(botClient, toDoUser.Role, update.Message.Chat, ct);
             MarkupManager.SetStandartKeyboardButtonList(toDoUser.Role);

@@ -56,5 +56,10 @@ namespace MyShift
             await context.SaveChangesAsync(ct);
             return true;
         }
+        public async Task<Notification?> GetNotificationByUserIdAndType(int userId, string type, CancellationToken ct)
+        {
+            using var context = _dbFactory.CreateDbContext();
+            return await context.Notifications.FirstOrDefaultAsync(u => u.user.Id == userId && u.Type.StartsWith(type), ct);
+        }
     }
 }
