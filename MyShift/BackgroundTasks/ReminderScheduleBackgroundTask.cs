@@ -32,8 +32,11 @@ namespace MyShift.BackgroundTasks
                 {
                     foreach (ToDoUser user in users)
                     {
-                        await _botClient.SendMessage(user.TelegramId, notification.Text, cancellationToken: ct);
-                        await _notificationService.MarkNotified(notification.id, ct);
+                        if (user.Id == notification.user.Id)
+                        {
+                            await _botClient.SendMessage(user.TelegramId, notification.Text, cancellationToken: ct);
+                            await _notificationService.MarkNotified(notification.id, ct);
+                        }
                     }
                 }
             }

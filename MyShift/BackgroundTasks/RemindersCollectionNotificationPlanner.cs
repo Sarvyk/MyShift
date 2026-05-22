@@ -27,7 +27,7 @@ namespace MyShift.BackgroundTasks
             foreach(Shift shift in shifts)
             {
                 await _notificationService.ScheduleNotification(shift.UserSchedule.User.Id, $"Shift_{shift.Id}_{DateOnly.FromDateTime(DateTime.UtcNow)}", 
-                    $"У вас на завтра ({shift.ShiftDate.Date.ToString("D")}) назначена {shift.ShiftType.GetDisplayName()} с {shift.StartTime} до {shift.EndTime}", DateTime.UtcNow, ct);
+                    $"У вас на завтра ({shift.ShiftDate.Date.ToString("D")}) назначена {shift.ShiftType.GetDisplayName()} с {shift.StartTime.Value.ToString(@"hh\:mm")} до {shift.EndTime.Value.ToString(@"hh\:mm")}", DateTime.UtcNow, ct);
             }
         }
     }
