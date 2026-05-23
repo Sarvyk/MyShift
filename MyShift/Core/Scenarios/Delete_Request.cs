@@ -54,9 +54,9 @@ namespace MyShift.Core.Scenarios
                     }
                     Request deletingRequest = await _scheduleRequestService.GetRequestAsync(Int32.Parse(context.Data["RequestId"].ToString()), ct);
                     Notification? notification = await _notificationService.GetNotificationByUserIdAndType(deletingRequest.CreatorId, $"Request_{deletingRequest.Id}", ct);
+                    await _scheduleRequestService.DeleteRequestAsync(deletingRequest.Id, ct);
                     if(notification != null)
-                        await _scheduleRequestService.DeleteRequestAsync(deletingRequest.Id, ct);
-                    await _notificationService.MarkNotified(notification.id, ct);
+                        await _notificationService.MarkNotified(notification.id, ct);
                     break;
             }
             await botClient.SendMessage(message.Chat, $"Заявка удалена🗑️✅", replyMarkup: MarkupManager.SetStandartKeyboardButtonList(roleCurrentUser), cancellationToken: ct);
